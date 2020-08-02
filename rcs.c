@@ -60,13 +60,21 @@
 \def RCS256_MKEY_LENGTH
 * The size of the hba-rhx256 mac key array
 */
-#define RCS256_MKEY_LENGTH 32
+#if defined(RCS_HMAC_EXTENSION)
+#	define RCS256_MKEY_LENGTH 64
+#else
+#	define RCS256_MKEY_LENGTH 32
+#endif
 
 /*!
 \def RCS512_MKEY_LENGTH
 * The size of the hba-rhx512 mac key array
 */
-#define RCS512_MKEY_LENGTH 64
+#if defined(RCS_HMAC_EXTENSION)
+#	define RCS512_MKEY_LENGTH 128
+#else
+#	define RCS512_MKEY_LENGTH 64
+#endif
 
 /*!
 \def RCS_NAME_LENGTH
@@ -92,11 +100,6 @@ static const uint8_t RCS_HKDF256_INFO[7] = { 82, 72, 88, 72, 50, 53, 54 };
 /* RHXH512 */
 static const uint8_t RCS_HKDF512_INFO[7] = { 82, 72, 88, 72, 53, 49, 50 };
 #endif
-
-static const uint8_t rcs_version_info[RCS_INFO_LENGTH] =
-{ 
-	0x52, 0x43, 0x53, 0x20, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6F, 0x6E, 0x20, 0x31, 0x2E, 0x30, 0x63 
-};
 
 #ifdef RCS_HMAC_EXTENSION
 	static const uint8_t rcs256_name[RCS_NAME_LENGTH] =
@@ -135,7 +138,7 @@ static void rcs_encrypt_block(rcs_state* state, __m128i output[2], const __m128i
 	const __m128i BLEND_MASK = _mm_set_epi32(0x80000000UL, 0x80800000UL, 0x80800000UL, 0x80808000UL);
 	const __m128i SHIFT_MASK = { 0, 1, 6, 7, 4, 5, 10, 11, 8, 9, 14, 15, 12, 13, 2, 3 };
 	const size_t HLFBLK = RCS_BLOCK_SIZE / 2;
-	const size_t RNDCNT = state->rkeylen - 3;
+	const size_t RNDCNT = state->roundkeylen - 3;
 	size_t kctr;
 
 	__m128i blk1 = _mm_loadu_si128(&input[0]);
@@ -144,9 +147,9 @@ static void rcs_encrypt_block(rcs_state* state, __m128i output[2], const __m128i
 	__m128i tmp2;
 
 	kctr = 0;
-	blk1 = _mm_xor_si128(blk1, state->rkeys[kctr]);
+	blk1 = _mm_xor_si128(blk1, state->roundkeys[kctr]);
 	++kctr;
-	blk2 = _mm_xor_si128(blk2, state->rkeys[kctr]);
+	blk2 = _mm_xor_si128(blk2, state->roundkeys[kctr]);
 
 	while (kctr != RNDCNT)
 	{
@@ -158,10 +161,10 @@ static void rcs_encrypt_block(rcs_state* state, __m128i output[2], const __m128i
 		tmp2 = _mm_shuffle_epi8(tmp2, SHIFT_MASK);
 		++kctr;
 		/* encrypt the first half-block */
-		blk1 = _mm_aesenc_si128(tmp1, state->rkeys[kctr]);
+		blk1 = _mm_aesenc_si128(tmp1, state->roundkeys[kctr]);
 		++kctr;
 		/* encrypt the second half-block */
-		blk2 = _mm_aesenc_si128(tmp2, state->rkeys[kctr]);
+		blk2 = _mm_aesenc_si128(tmp2, state->roundkeys[kctr]);
 	}
 
 	/* final block */
@@ -170,9 +173,9 @@ static void rcs_encrypt_block(rcs_state* state, __m128i output[2], const __m128i
 	tmp1 = _mm_shuffle_epi8(tmp1, SHIFT_MASK);
 	tmp2 = _mm_shuffle_epi8(tmp2, SHIFT_MASK);
 	++kctr;
-	blk1 = _mm_aesenclast_si128(tmp1, state->rkeys[kctr]);
+	blk1 = _mm_aesenclast_si128(tmp1, state->roundkeys[kctr]);
 	++kctr;
-	blk2 = _mm_aesenclast_si128(tmp2, state->rkeys[kctr]);
+	blk2 = _mm_aesenclast_si128(tmp2, state->roundkeys[kctr]);
 
 	/* store in output */
 	_mm_storeu_si128(&output[0], blk1);
@@ -181,9 +184,9 @@ static void rcs_encrypt_block(rcs_state* state, __m128i output[2], const __m128i
 
 static void rcs_ctr_transform(rcs_state* state, uint8_t* output, const uint8_t* input, size_t inputlen)
 {
-	assert(state != NULL);
-	assert(input != NULL);
-	assert(output != NULL);
+	assert(state != (rcs_state*)0);
+	assert(input != (uint8_t*)0);
+	assert(output != (uint8_t*)0);
 
 	const size_t HLFBLK = RCS_BLOCK_SIZE / 2;
 	size_t i;
@@ -295,9 +298,9 @@ static void rcs_add_roundkey(uint8_t* state, const uint32_t *skeys)
 	{
 		k = *skeys;
 		state[i] ^= (uint8_t)(k >> 24);
-		state[i + 1] ^= (uint8_t)(k >> 16) & 0xFF;
-		state[i + 2] ^= (uint8_t)(k >> 8) & 0xFF;
-		state[i + 3] ^= (uint8_t)k & 0xFF;
+		state[i + 1] ^= (uint8_t)(k >> 16) & 0xFFU;
+		state[i + 2] ^= (uint8_t)(k >> 8) & 0xFFU;
+		state[i + 3] ^= (uint8_t)k & 0xFFU;
 		++skeys;
 	}
 }
@@ -308,7 +311,7 @@ static uint8_t rcs_gf256_reduce(uint32_t x)
 
 	y = x >> 8;
 
-	return (x ^ y ^ (y << 1) ^ (y << 3) ^ (y << 4)) & 0xFF;
+	return (x ^ y ^ (y << 1) ^ (y << 3) ^ (y << 4)) & 0xFFU;
 }
 
 static void rcs_mix_columns(uint8_t* state)
@@ -421,13 +424,13 @@ static uint32_t rcs_substitution(uint32_t rot)
 	uint32_t val;
 	uint32_t res;
 
-	val = rot & 0xFF;
+	val = rot & 0xFFU;
 	res = s_box[val];
-	val = (rot >> 8) & 0xFF;
+	val = (rot >> 8) & 0xFFU;
 	res |= ((uint32_t)s_box[val] << 8);
-	val = (rot >> 16) & 0xFF;
+	val = (rot >> 16) & 0xFFU;
 	res |= ((uint32_t)s_box[val] << 16);
-	val = (rot >> 24) & 0xFF;
+	val = (rot >> 24) & 0xFFU;
 
 	return res | ((uint32_t)(s_box[val]) << 24);
 }
@@ -438,7 +441,7 @@ static void rcs_encrypt_block(rcs_state* state, uint8_t* output, const uint8_t* 
 	size_t i;
 
 	memcpy(buf, input, RCS_BLOCK_SIZE);
-	rcs_add_roundkey(buf, state->rkeys);
+	rcs_add_roundkey(buf, state->roundkeys);
 	rcs_prefetch_sbox(true);
 
 	for (i = 1; i < state->rounds; ++i)
@@ -446,20 +449,20 @@ static void rcs_encrypt_block(rcs_state* state, uint8_t* output, const uint8_t* 
 		rcs_sub_bytes(buf, s_box);
 		rcs_shift_rows(buf);
 		rcs_mix_columns(buf);
-		rcs_add_roundkey(buf, state->rkeys + (i << 3));
+		rcs_add_roundkey(buf, state->roundkeys + (i << 3));
 	}
 
 	rcs_sub_bytes(buf, s_box);
 	rcs_shift_rows(buf);
-	rcs_add_roundkey(buf, state->rkeys + (state->rounds << 3));
+	rcs_add_roundkey(buf, state->roundkeys + (state->rounds << 3));
 	memcpy(output, buf, RCS_BLOCK_SIZE);
 }
 
 static void rcs_ctr_transform(rcs_state* state, uint8_t* output, const uint8_t* input, size_t inputlen)
 {
-	assert(state != NULL);
-	assert(input != NULL);
-	assert(output != NULL);
+	assert(state != (rcs_state*)0);
+	assert(input != (uint8_t*)0);
+	assert(output != (uint8_t*)0);
 
 	size_t i;
 	size_t poff;
@@ -511,7 +514,7 @@ static bool rcs_finalize(rcs_state* state, uint8_t* output, const uint8_t* input
 	/* allocate the input array */
 	minp = (uint8_t*)malloc(TLEN);
 
-	if (minp != NULL)
+	if (minp != (uint8_t*)0)
 	{
 		memset(minp, 0x00, TLEN);
 		memcpy(minp, ncopy, RCS_BLOCK_SIZE);
@@ -564,8 +567,8 @@ static bool rcs_finalize(rcs_state* state, uint8_t* output, const uint8_t* input
 		if (state->ctype == RCS256)
 		{
 			/* generate the new mac key */
-			uint8_t tmpn[RCS_NAME_LENGTH];
-			uint8_t tmpk[RCS256_MKEY_LENGTH];
+			uint8_t tmpn[RCS_NAME_LENGTH] = { 0 };
+			uint8_t tmpk[RCS256_MKEY_LENGTH] = { 0 };
 
 			memcpy(tmpn, rcs256_name, RCS_NAME_LENGTH);
 			/* add 1 + the nonce, and last input size */
@@ -573,18 +576,18 @@ static bool rcs_finalize(rcs_state* state, uint8_t* output, const uint8_t* input
 			le64to8(tmpn, state->counter);
 
 			/* generate the key and copy to state */
-			cshake256(tmpk, RCS256_MKEY_LENGTH, state->mkey, state->mkeylen, tmpn, RCS_NAME_LENGTH, rcs_version_info, sizeof(rcs_version_info));
+			cshake256(tmpk, RCS256_MKEY_LENGTH, state->mkey, state->mkeylen, tmpn, RCS_NAME_LENGTH, state->custom, state->custlen);
 			memcpy(state->mkey, tmpk, sizeof(tmpk));
 		}
 		else
 		{
-			uint8_t tmpn[RCS_NAME_LENGTH];
-			uint8_t tmpk[RCS512_MKEY_LENGTH];
+			uint8_t tmpn[RCS_NAME_LENGTH] = { 0 };
+			uint8_t tmpk[RCS512_MKEY_LENGTH] = { 0 };
 
 			memcpy(tmpn, rcs512_name, RCS_NAME_LENGTH);
 			le64to8(tmpn, state->counter);
 
-			cshake512(tmpk, RCS512_MKEY_LENGTH, state->mkey, state->mkeylen, tmpn, RCS_NAME_LENGTH, rcs_version_info, sizeof(rcs_version_info));
+			cshake512(tmpk, RCS512_MKEY_LENGTH, state->mkey, state->mkeylen, tmpn, RCS_NAME_LENGTH, state->custom, state->custlen);
 			memcpy(state->mkey, tmpk, sizeof(tmpk));
 		}
 
@@ -594,236 +597,155 @@ static bool rcs_finalize(rcs_state* state, uint8_t* output, const uint8_t* input
 	return res;
 }
 
-static bool rcs_secure_expand(rcs_state* state, const rcs_keyparams* keyparams)
+static void rcs_secure_expand(rcs_state* state, const rcs_keyparams* keyparams)
 {
-	const size_t CLEN = sizeof(rcs_version_info) + keyparams->infolen;
 	uint8_t sbuf[SHAKE_STATE_SIZE * sizeof(uint64_t)] = { 0 };
-	uint8_t* cust;
-	shake_state shks;
+	keccak_state kstate;
 	size_t i;
 	size_t oft;
 	size_t rlen;
-	bool res;
 
-	res = false;
-	cust = (uint8_t*)malloc(CLEN);
+	clear64(kstate.state, SHAKE_STATE_SIZE);
 
-	if (cust != NULL)
+	if (state->ctype == RCS256)
 	{
-		memset(cust, 0x00, CLEN);
+		uint8_t tmpr[RCS256_ROUNDKEY_SIZE * ROUNDKEY_ELEMENT_SIZE] = { 0 };
 
-		/* copy hba info to the cSHAKE customization string */
-		memcpy(cust, rcs_version_info, RCS_INFO_LENGTH);
+		/* initialize an instance of cSHAKE */
+		cshake256_initialize(&kstate, keyparams->key, keyparams->keylen, rcs256_name, RCS_NAME_LENGTH, state->custom, state->custlen);
 
-		/* copy the user info to custom */
-		if (keyparams->infolen != 0)
+		oft = 0;
+		rlen = RCS256_ROUNDKEY_SIZE * ROUNDKEY_ELEMENT_SIZE;
+
+		while (rlen != 0)
 		{
-			memcpy(cust + sizeof(rcs_version_info), keyparams->info, keyparams->infolen);
+			const size_t BLKLEN = (rlen > SHAKE_256_RATE) ? SHAKE_256_RATE : rlen;
+			cshake256_squeezeblocks(&kstate, sbuf, 1);
+			memcpy(tmpr + oft, sbuf, BLKLEN);
+
+			oft += BLKLEN;
+			rlen -= BLKLEN;
 		}
-
-		clear64(shks.state, SHAKE_STATE_SIZE);
-
-		if (state->ctype == RCS256)
-		{
-			uint8_t tmpr[RCS256_ROUNDKEY_SIZE * ROUNDKEY_ELEMENT_SIZE];
-
-			/* initialize an instance of cSHAKE */
-			cshake256_initialize(&shks, keyparams->key, keyparams->keylen, rcs256_name, RCS_NAME_LENGTH, cust, CLEN);
-			free(cust);
-
-			oft = 0;
-			rlen = RCS256_ROUNDKEY_SIZE * ROUNDKEY_ELEMENT_SIZE;
-
-			while (rlen != 0)
-			{
-				const size_t BLKLEN = (rlen > SHAKE_256_RATE) ? SHAKE_256_RATE : rlen;
-				cshake256_squeezeblocks(&shks, sbuf, 1);
-				memcpy(tmpr + oft, sbuf, BLKLEN);
-
-				oft += BLKLEN;
-				rlen -= BLKLEN;
-			}
 
 #ifdef RCS_AESNI_ENABLED
-			const size_t RNKLEN = (RCS_BLOCK_SIZE / sizeof(__m128i)) * (state->rounds + 1);
+		const size_t RNKLEN = (RCS_BLOCK_SIZE / sizeof(__m128i)) * (state->rounds + 1);
 
-			/* copy p-rand bytes to round keys */
-			for (i = 0; i < RNKLEN; ++i)
-			{
-				state->rkeys[i] = _mm_loadu_si128((const __m128i*)(tmpr + (i * sizeof(__m128i))));
-			}
-
-#else
-			/* realign in big endian format for ACS test vectors; RCS is the fallback to the AES-NI implementation */
-			for (i = 0; i < sizeof(tmpr) / sizeof(uint32_t); ++i)
-			{
-				state->rkeys[i] = be8to32(tmpr + (i * sizeof(uint32_t)));
-			}
-#endif
-
-			/* use two permutation calls to seperate the cipher/mac key outputs to match the CEX implementation */
-			cshake256_squeezeblocks(&shks, sbuf, 1);
-			memcpy(state->mkey, sbuf, RCS256_MKEY_LENGTH);
-			/* clear the shake buffer */
-			clear64(shks.state, SHAKE_STATE_SIZE);
-		}
-		else
+		/* copy p-rand bytes to round keys */
+		for (i = 0; i < RNKLEN; ++i)
 		{
-			uint8_t tmpr[RCS512_ROUNDKEY_SIZE * ROUNDKEY_ELEMENT_SIZE];
-
-			/* initialize an instance of cSHAKE */
-			cshake512_initialize(&shks, keyparams->key, keyparams->keylen, rcs512_name, RCS_NAME_LENGTH, cust, CLEN);
-			free(cust);
-
-			oft = 0;
-			rlen = RCS512_ROUNDKEY_SIZE * ROUNDKEY_ELEMENT_SIZE;
-
-			while (rlen != 0)
-			{
-				const size_t BLKLEN = (rlen > SHAKE_512_RATE) ? SHAKE_512_RATE : rlen;
-				cshake512_squeezeblocks(&shks, sbuf, 1);
-				memcpy(tmpr + oft, sbuf, BLKLEN);
-
-				oft += BLKLEN;
-				rlen -= BLKLEN;
-			}
-
-#ifdef RCS_AESNI_ENABLED
-			memcpy((uint8_t*)state->rkeys, tmpr, sizeof(tmpr));
-#else
-			/* realign in big endian format for ACS test vectors; RCS is the fallback to the AES-NI implementation */
-			for (i = 0; i < sizeof(tmpr) / sizeof(uint32_t); ++i)
-			{
-				state->rkeys[i] = be8to32(tmpr + (i * sizeof(uint32_t)));
-			}
-#endif
-
-			/* use two permutation calls (no buffering) to seperate the cipher/mac key outputs to match the CEX implementation */
-			cshake512_squeezeblocks(&shks, sbuf, 1);
-			memcpy(state->mkey, sbuf, RCS512_MKEY_LENGTH);
-			/* clear the shake buffer */
-			clear64(shks.state, SHAKE_STATE_SIZE);
+			state->roundkeys[i] = _mm_loadu_si128((const __m128i*)(tmpr + (i * sizeof(__m128i))));
 		}
 
-		res = true;
+#else
+		/* realign in big endian format for ACS test vectors; RCS is the fallback to the AES-NI implementation */
+		for (i = 0; i < RCS256_ROUNDKEY_SIZE; ++i)
+		{
+			state->roundkeys[i] = be8to32(tmpr + (i * sizeof(uint32_t)));
+		}
+#endif
+
+		/* use two permutation calls to seperate the cipher/mac key outputs to match the CEX implementation */
+		cshake256_squeezeblocks(&kstate, sbuf, 1);
+		memcpy(state->mkey, sbuf, RCS256_MKEY_LENGTH);
+		/* clear the shake buffer */
+		clear64(kstate.state, SHAKE_STATE_SIZE);
 	}
+	else
+	{
+		uint8_t tmpr[RCS512_ROUNDKEY_SIZE * ROUNDKEY_ELEMENT_SIZE] = { 0 };
 
-	return res;
+		/* initialize an instance of cSHAKE */
+		cshake512_initialize(&kstate, keyparams->key, keyparams->keylen, rcs512_name, RCS_NAME_LENGTH, state->custom, state->custlen);
+
+		oft = 0;
+		rlen = RCS512_ROUNDKEY_SIZE * ROUNDKEY_ELEMENT_SIZE;
+
+		while (rlen != 0)
+		{
+			const size_t BLKLEN = (rlen > SHAKE_512_RATE) ? SHAKE_512_RATE : rlen;
+			cshake512_squeezeblocks(&kstate, sbuf, 1);
+			memcpy(tmpr + oft, sbuf, BLKLEN);
+
+			oft += BLKLEN;
+			rlen -= BLKLEN;
+		}
+
+#ifdef RCS_AESNI_ENABLED
+		memcpy((uint8_t*)state->roundkeys, tmpr, sizeof(tmpr));
+#else
+		/* realign in big endian format for ACS test vectors; RCS is the fallback to the AES-NI implementation */
+		for (i = 0; i < RCS512_ROUNDKEY_SIZE; ++i)
+		{
+			state->roundkeys[i] = be8to32(tmpr + (i * sizeof(uint32_t)));
+		}
+#endif
+
+		/* use two permutation calls (no buffering) to seperate the cipher/mac key outputs to match the CEX implementation */
+		rlen = RCS512_MKEY_LENGTH;
+		oft = 0;
+
+		while (rlen != 0)
+		{
+			const size_t BLKLEN = (rlen > SHAKE_512_RATE) ? SHAKE_512_RATE : rlen;
+			cshake512_squeezeblocks(&kstate, sbuf, 1);
+			memcpy(state->mkey + oft, sbuf, BLKLEN);
+
+			oft += BLKLEN;
+			rlen -= BLKLEN;
+		}
+
+		/* clear the shake buffer */
+		clear64(kstate.state, SHAKE_STATE_SIZE);
+	}
 }
 
 /* rcs common */
 
 void rcs_dispose(rcs_state* state)
 {
-	if (state != NULL)
+	if (state != (rcs_state*)0)
 	{
-		if (state->rkeys != NULL && state->rkeylen != 0)
-		{
-			memset(state->rkeys, 0x00, state->rkeylen * sizeof(uint32_t));
-			free(state->rkeys);
-			state->rkeys = NULL;
-		}
-
-		if (state->aad != NULL && state->aadlen != 0)
-		{
-			memset(state->aad, 0x00, state->aadlen);
-			free(state->aad);
-			state->aad = NULL;
-		}
-
-		if (state->mkey != NULL && state->mkeylen != 0)
-		{
-			memset(state->mkey, 0x00, state->mkeylen);
-			free(state->mkey);
-			state->mkey = NULL;
-		}
-
+		memset(state->roundkeys, 0x00, sizeof(state->roundkeys));
+		memset(state->mkey, 0x00, sizeof(state->mkey));
 		state->aadlen = 0;
 		state->counter = 0;
 		state->ctype = RCS256;
 		state->mkeylen = 0;
-		state->rkeylen = 0;
+		state->roundkeylen = 0;
 		state->rounds = 0;
 		state->encrypt = false;
 	}
 }
 
-bool rcs_initialize(rcs_state* state, const rcs_keyparams* keyparams, bool encryption, rcs_cipher_type ctype)
+void rcs_initialize(rcs_state* state, const rcs_keyparams* keyparams, bool encryption, rcs_cipher_type ctype)
 {
-#ifdef RCS_AESNI_ENABLED
-	__m128i* rkeys;
-#else
-	uint32_t* rkeys;
-#endif
-	uint8_t* mkey;
-
-	bool res;
-
-	res = false;
 	state->ctype = ctype;
+	memset(state->roundkeys, 0x00, sizeof(state->roundkeys));
+	memset(state->mkey, 0x00, sizeof(state->mkey));
+	state->nonce = keyparams->nonce;
+	state->counter = 1;
+	state->encrypt = encryption;
+	state->aadlen = 0;
+	state->custom = keyparams->info;
+	state->custlen = keyparams->infolen;
 
 	if (state->ctype == RCS256)
 	{
-#ifdef RCS_AESNI_ENABLED
-		rkeys = (__m128i*)malloc(RCS256_ROUNDKEY_SIZE * sizeof(__m128i));
-#else
-		rkeys = (uint32_t*)malloc(RCS256_ROUNDKEY_SIZE * sizeof(uint32_t));
-#endif
-
-		mkey = (uint8_t*)malloc(RCS256_MKEY_LENGTH);
-
-		if (mkey != NULL && rkeys != NULL)
-		{
-			memset((uint8_t*)rkeys, 0x00, RCS256_ROUNDKEY_SIZE * ROUNDKEY_ELEMENT_SIZE);
-
-			/* initialize rcs state */
-			state->rkeylen = RCS256_ROUNDKEY_SIZE;
-			state->rkeys = rkeys;
-			state->rounds = 22;
-			state->mkey = mkey;
-			state->mkeylen = RCS256_MKEY_LENGTH;
-			state->nonce = keyparams->nonce;
-			state->counter = 1;
-			state->encrypt = encryption;
-			state->aadlen = 0;
-
-			/* generate the cipher and mac keys */
-			rcs_secure_expand(state, keyparams);
-			res = true;
-		}
+		/* initialize rcs state */
+		state->roundkeylen = RCS256_ROUNDKEY_SIZE;
+		state->rounds = 22;
+		state->mkeylen = RCS256_MKEY_LENGTH;
 	}
 	else
 	{
-#ifdef RCS_AESNI_ENABLED
-		rkeys = (__m128i*)malloc(RCS512_ROUNDKEY_SIZE * sizeof(__m128i));
-#else
-		rkeys = (uint32_t*)malloc(RCS512_ROUNDKEY_SIZE * sizeof(uint32_t));
-#endif
-
-		mkey = (uint8_t*)malloc(RCS512_MKEY_LENGTH);
-
-		if (mkey != NULL && rkeys != NULL)
-		{
-			memset((uint8_t*)rkeys, 0x00, RCS512_ROUNDKEY_SIZE * ROUNDKEY_ELEMENT_SIZE);
-
-			/* initialize rcs state */
-			state->rkeylen = RCS512_ROUNDKEY_SIZE;
-			state->rkeys = rkeys;
-			state->rounds = 30;
-			state->mkey = mkey;
-			state->mkeylen = RCS512_MKEY_LENGTH;
-			state->nonce = keyparams->nonce;
-			state->counter = 1;
-			state->encrypt = encryption;
-			state->aadlen = 0;
-
-			/* generate the cipher and mac keys */
-			rcs_secure_expand(state, keyparams);
-			res = true;
-		}
+		/* initialize rcs state */
+		state->roundkeylen = RCS512_ROUNDKEY_SIZE;
+		state->rounds = 30;
+		state->mkeylen = RCS512_MKEY_LENGTH;
 	}
 
-	return res;
+	/* generate the cipher and mac keys */
+	rcs_secure_expand(state, keyparams);
 }
 
 void rcs_set_associated(rcs_state* state, uint8_t* data, size_t datalen)

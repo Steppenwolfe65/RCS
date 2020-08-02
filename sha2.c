@@ -16,7 +16,7 @@ static const uint32_t sha256_iv[8] =
 	0x5BE0CD19UL
 };
 
-static sha256_increase(sha256_state* state, size_t msglen)
+static void sha256_increase(sha256_state* state, size_t msglen)
 {
 	state->t += msglen;
 }
@@ -89,9 +89,9 @@ void sha256_finalize(sha256_state* state, uint8_t* output, const uint8_t* messag
 	be32to8(pad + 60, (uint32_t)bitLen);
 	sha256_permute(state->state, pad);
 
-	for (i = 0; i < SHA2_256_HASH; i += 4)
+	for (i = 0; i < SHA2_256_HASH; i += sizeof(uint32_t))
 	{
-		be32to8(output + i, state->state[i / 4]);
+		be32to8(output + i, state->state[i / sizeof(uint32_t)]);
 	}
 }
 
@@ -126,7 +126,7 @@ void sha256_permute(uint32_t* output, const uint8_t* message)
 	ptmp = _mm_loadu_si128((__m128i*)output);
 	s1 = _mm_loadu_si128((__m128i*)output + (4 * sizeof(uint32_t)));
 	mask = _mm_set_epi64x(0x0C0D0E0F08090A0BULL, 0x0405060700010203ULL);
-	ptmp = _mm_shuffle_epi32(ptmp, 0xB1); 
+	ptmp = _mm_shuffle_epi32(ptmp, 0xB1);
 	s1 = _mm_shuffle_epi32(s1, 0x1B);
 	s0 = _mm_alignr_epi8(ptmp, s1, 8);
 	s1 = _mm_blend_epi16(s1, ptmp, 0xF0);
@@ -1624,7 +1624,7 @@ void hmac256_blockupdate(hmac256_state* state, const uint8_t* message, size_t nb
 
 void hmac256_finalize(hmac256_state* state, uint8_t* output, const uint8_t* message, size_t msglen)
 {
-	uint8_t tmpv[SHA2_256_HASH];
+	uint8_t tmpv[SHA2_256_HASH] = { 0 };
 	size_t oft;
 
 	oft = 0;
@@ -1692,7 +1692,7 @@ void hmac512_compute(uint8_t* output, const uint8_t* message, size_t msglen, con
 	const uint8_t OPAD = 0x5C;
 	uint8_t ipad[SHA2_512_RATE] = { 0 };
 	uint8_t opad[SHA2_512_RATE];
-	uint8_t tmpv[SHA2_512_HASH];
+	uint8_t tmpv[SHA2_512_HASH] = { 0 };
 	sha512_state state;
 	size_t i;
 
@@ -1746,7 +1746,7 @@ void hmac512_blockupdate(hmac512_state* state, const uint8_t* message, size_t nb
 
 void hmac512_finalize(hmac512_state* state, uint8_t* output, const uint8_t* message, size_t msglen)
 {
-	uint8_t tmpv[SHA2_512_HASH];
+	uint8_t tmpv[SHA2_512_HASH] = { 0 };
 	size_t oft;
 
 	oft = 0;
@@ -1851,16 +1851,19 @@ void hkdf256_expand(uint8_t* output, size_t outlen, const uint8_t* key, size_t k
 				slen = 0;
 			}
 
-			while (mlen >= SHA2_256_RATE)
+			if (infolen > 0)
 			{
-				hmac256_blockupdate(&state, info + ioft, 1);
-				ioft += SHA2_256_RATE;
-				mlen -= SHA2_256_RATE;
-			}
+				while (mlen >= SHA2_256_RATE)
+				{
+					hmac256_blockupdate(&state, info + ioft, 1);
+					ioft += SHA2_256_RATE;
+					mlen -= SHA2_256_RATE;
+				}
 
-			for (i = 0; i < mlen; ++i)
-			{
-				msg[slen + i] = info[ioft + i];
+				for (i = 0; i < mlen; ++i)
+				{
+					msg[slen + i] = info[ioft + i];
+				}
 			}
 
 			++ctr;
@@ -1876,9 +1879,12 @@ void hkdf256_expand(uint8_t* output, size_t outlen, const uint8_t* key, size_t k
 				mlen -= SHA2_256_RATE;
 			}
 
-			for (i = 0; i < mlen; ++i)
+			if (infolen > 0)
 			{
-				msg[i] = info[ioft + i];
+				for (i = 0; i < mlen; ++i)
+				{
+					msg[i] = info[ioft + i];
+				}
 			}
 
 			++ctr;
@@ -1886,7 +1892,7 @@ void hkdf256_expand(uint8_t* output, size_t outlen, const uint8_t* key, size_t k
 			hmac256_finalize(&state, otp, msg, mlen + 1);
 		}
 
-		rmd = min((uint32_t)outlen, SHA2_256_HASH);
+		rmd = minu(outlen, (size_t)SHA2_256_HASH);
 
 		for (i = 0; i < rmd; ++i)
 		{
@@ -1960,16 +1966,19 @@ void hkdf512_expand(uint8_t* output, size_t outlen, const uint8_t* key, size_t k
 				slen = 0;
 			}
 
-			while (mlen >= SHA2_512_RATE)
+			if (infolen > 0)
 			{
-				hmac512_blockupdate(&state, info + ioft, 1);
-				ioft += SHA2_512_RATE;
-				mlen -= SHA2_512_RATE;
-			}
+				while (mlen >= SHA2_512_RATE)
+				{
+					hmac512_blockupdate(&state, info + ioft, 1);
+					ioft += SHA2_512_RATE;
+					mlen -= SHA2_512_RATE;
+				}
 
-			for (i = 0; i < mlen; ++i)
-			{
-				msg[slen + i] = info[ioft + i];
+				for (i = 0; i < mlen; ++i)
+				{
+					msg[slen + i] = info[ioft + i];
+				}
 			}
 
 			++ctr;
@@ -1985,9 +1994,12 @@ void hkdf512_expand(uint8_t* output, size_t outlen, const uint8_t* key, size_t k
 				mlen -= SHA2_512_RATE;
 			}
 
-			for (i = 0; i < mlen; ++i)
+			if (infolen > 0)
 			{
-				msg[i] = info[ioft + i];
+				for (i = 0; i < mlen; ++i)
+				{
+					msg[i] = info[ioft + i];
+				}
 			}
 
 			++ctr;
@@ -1995,7 +2007,7 @@ void hkdf512_expand(uint8_t* output, size_t outlen, const uint8_t* key, size_t k
 			hmac512_finalize(&state, otp, msg, mlen + 1);
 		}
 
-		rmd = min((uint32_t)outlen, SHA2_512_HASH);
+		rmd = minu(outlen, (size_t)SHA2_512_HASH);
 
 		for (i = 0; i < rmd; ++i)
 		{

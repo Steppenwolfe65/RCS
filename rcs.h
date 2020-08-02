@@ -55,7 +55,7 @@
 * The rcs_set_associated(state,in,inlen) function can be used to add additional data to the MAC generators input, like packet-header data, or a custom code or counter.</p>
 
 * \section Implementation
-* This implementation has both a C reference code, and an implementation that uses the AES-NI instructions that is used by the RCS cipher rounds function. \n
+* This implementation has both a C reference code, and an implementation that uses the AES-NI instructions that are used in the AES and RCS cipher variants. \n
 * The AES-NI implementation can be enabled by adding the RCS_AESNI_ENABLED constant to your preprocessor definitions. \n
 * The implementation can be toggled from SHA3 to SHA2 HMAC authentication mode by adding the RCS_HMAC_EXTENSION to the pre-processor definitions. \n
 * The RCS-256, RCS-512, known answer vectors are taken from the CEX++ cryptographic library <a href="https://github.com/Steppenwolfe65/CEX">The CEX++ Cryptographic Library</a>. \n
@@ -84,7 +84,7 @@
 * \author John Underhill
 * \date February 05, 2020
 *
-*
+
 * <b>RCS-256 encryption example</b> \n
 * \code
 * // external message, key, nonce, and custom-info arrays
@@ -156,12 +156,12 @@
 #endif 
 
 #ifdef RCS_AESNI_ENABLED
-#	if defined(_MSC_VER)
+#	if defined(QSC_COMPILER_MSC)
 #		include <intrin.h>
-#	elif defined(__GNUC__)
+#		include <wmmintrin.h>
+#	elif defined(QSC_COMPILER_GCC)
 #		include <x86intrin.h>
 #	endif
-#	include <wmmintrin.h>
 #endif
 
 /*!
@@ -249,16 +249,18 @@ typedef struct
 {
 	rcs_cipher_type ctype;			/*!< The cipher type; RCS-256 or RCS-512 */
 #if defined(RCS_AESNI_ENABLED)
-	__m128i* rkeys;					/*!< The 128-bit integer round-key array */
+	__m128i roundkeys[62];			/*!< The 128-bit integer round-key array */
 #else
-	uint32_t* rkeys;				/*!< The round-keys 32-bit subkey array */
+	uint32_t roundkeys[248];		/*!< The round-keys 32-bit subkey array */
 #endif
-	size_t rkeylen;					/*!< The round-key array length */
+	size_t roundkeylen;				/*!< The round-key array length */
 	size_t rounds;					/*!< The number of transformation rounds */
 	uint8_t* nonce;					/*!< The nonce or initialization vector */
 	uint64_t counter;				/*!< the processed bytes counter */
-	uint8_t* mkey;					/*!< the mac generators key array */
+	uint8_t mkey[128];				/*!< the mac generators key array */
 	size_t mkeylen;					/*!< the mac key array length */
+	const uint8_t* custom;			/*!< the customization array */
+	size_t custlen;					/*!< the customization array length */
 	uint8_t* aad;					/*!< the additional data array */
 	size_t aadlen;					/*!< the additional data array length */
 	bool encrypt;					/*!< the transformation mode; true for encryption */
@@ -285,7 +287,7 @@ void rcs_dispose(rcs_state* state);
 * \param encryption: Initialize the cipher for encryption, or false for decryption mode
 * \param ctype: Selects the cipher type, either RCS256 or RCS512
 */
-bool rcs_initialize(rcs_state* state, const rcs_keyparams* keyparams, bool encryption, rcs_cipher_type ctype);
+void rcs_initialize(rcs_state* state, const rcs_keyparams* keyparams, bool encryption, rcs_cipher_type ctype);
 
 /**
 * \brief Set the associated data string used in authenticating the message.

@@ -573,4 +573,3 @@ void hkdf512_expand(uint8_t* output, size_t outlen, const uint8_t* key, size_t k
 void hkdf512_extract(uint8_t* output, size_t outlen, const uint8_t* key, size_t keylen, const uint8_t* salt, size_t saltlen);
 
 #endif
-

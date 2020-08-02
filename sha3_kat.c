@@ -19,7 +19,7 @@ bool sha3_256_kat_test()
 	uint8_t msg448[56] = { 0 };
 	uint8_t msg1600[200] = { 0 };
 	uint8_t output[SHA3_256_HASH] = { 0 };
-	sha3_state state;
+	keccak_state state;
 	bool status;
 
 	hex_to_bin("A7FFC6F8BF1ED76651C14756A061D662F580FF4DE43B49FA82D80A4B80F8434A", exp0, sizeof(exp0));
@@ -133,7 +133,7 @@ bool sha3_512_kat_test()
 	uint8_t msg448[56] = { 0 };
 	uint8_t msg1600[200] = { 0 };
 	uint8_t output[SHA3_512_HASH] = { 0 };
-	sha3_state state;
+	keccak_state state;
 	bool status;
 
 	hex_to_bin("A69F73CCA23A9AC5C8B567DC185A756E97C982164FE25859E0D1DCC1475C80A6"
@@ -247,7 +247,7 @@ bool shake_128_kat_test()
 	uint8_t msg0[1] = { 0 };
 	uint8_t msg1600[200] = { 0 };
 	uint8_t output[512] = { 0 };
-	shake_state state;
+	keccak_state state;
 	bool status;
 
 	hex_to_bin("7F9C2BA4E88F827D616045507605853ED73B8093F6EFBC88EB1A6EACFA66EF26"
@@ -335,7 +335,7 @@ bool shake_256_kat_test()
 	uint8_t msg0[1] = { 0 };
 	uint8_t msg1600[200] = { 0 };
 	uint8_t output[512] = { 0 };
-	shake_state state;
+	keccak_state state;
 	bool status;
 
 	hex_to_bin("46B9DD2B0BA88D13233B3FEB743EEB243FCD52EA62B81B82B50C27646ED5762F"
@@ -423,7 +423,7 @@ bool shake_512_kat_test()
 	uint8_t msg1[64] = { 0 };
 	uint8_t msg2[200] = { 0 };
 	uint8_t output[512] = { 0 };
-	shake_state state;
+	keccak_state state;
 	bool status;
 
 	hex_to_bin("D6DEAAF94A391E987698B17E0AE2D8C6C96BEAC5DD2FFCB20F45665EFE39CFFE"
@@ -516,7 +516,7 @@ bool cshake_128_kat_test()
 	uint8_t msg1600[200] = { 0 };
 	uint8_t name[1] = { 0 };
 	uint8_t output[32] = { 0 };
-	shake_state state;
+	keccak_state state;
 	bool status;
 
 	hex_to_bin("456D61696C205369676E6174757265", cust, sizeof(cust));
@@ -577,7 +577,7 @@ bool cshake_256_kat_test()
 	uint8_t msg1600[200] = { 0 };
 	uint8_t name[1] = { 0 };
 	uint8_t output[64] = { 0 };
-	shake_state state;
+	keccak_state state;
 	bool status;
 
 	hex_to_bin("456D61696C205369676E6174757265", cust, sizeof(cust));
@@ -637,7 +637,7 @@ bool cshake_512_kat_test()
 	uint8_t hashb[CSHAKE_512_RATE] = { 0 };
 	uint8_t msg512[64] = { 0 };
 	uint8_t output[64] = { 0 };
-	shake_state state;
+	keccak_state state;
 	bool status;
 
 	hex_to_bin("456D61696C205369676E6174757265", cust, sizeof(cust));
@@ -686,7 +686,7 @@ bool kmac_128_kat_test()
 	uint8_t msg1600[200] = { 0 };
 	uint8_t key256[32] = { 0 };
 	uint8_t output[32] = { 0 };
-	kmac_state state;
+	keccak_state state;
 	bool status;
 
 	hex_to_bin("4D7920546167676564204170706C69636174696F6E", cust168, sizeof(cust168));
@@ -761,7 +761,7 @@ bool kmac_256_kat_test()
 	uint8_t msg1600[200] = { 0 };
 	uint8_t key256[32] = { 0 };
 	uint8_t output[64] = { 0 };
-	kmac_state state;
+	keccak_state state;
 	bool status;
 
 	hex_to_bin("4D7920546167676564204170706C69636174696F6E", cust168, sizeof(cust168));
@@ -841,7 +841,7 @@ bool kmac_512_kat_test()
 	uint8_t msg0[42] = { 0 };
 	uint8_t msg1[84] = { 0 };
 	uint8_t output[64] = { 0 };
-	kmac_state state;
+	keccak_state state;
 	bool status;
 
 	hex_to_bin("4D7920546167676564204170706C69636174696F6E", cust0, sizeof(cust0));

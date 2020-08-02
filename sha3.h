@@ -74,7 +74,7 @@
 * uint8_t key[KMAC_512_KEY] = {...};
 * uint8_t cust[...] = {...};
 * uint8_t name[...] = {...};
-* shake_state state;
+* keccak_state state;
 *
 * // initialize the state to zeroes
 * clear64(state.state, SHAKE_STATE_SIZE);
@@ -313,15 +313,15 @@
 */
 #define SHAKE_STATE_SIZE 25
 
-/* sha3 */
-
-/*! \struct sha3_state
-* The SHA3 digest state array
+/*! \struct keccak_state
+* The Keccak state array; state array must be initialized by the caller
 */
 typedef struct
 {
 	uint64_t state[SHA3_STATE_SIZE];
-} sha3_state;
+} keccak_state;
+
+/* sha3 */
 
 /**
 * \brief Process a message with SHA3-256 and return the hash code in the output byte array.
@@ -355,12 +355,12 @@ void sha3_compute512(uint8_t* output, const uint8_t* message, size_t msglen);
 * \warning Message length must be a multiple of the rate size. \n
 * State must be initialized (and zeroed) by the caller.
 *
-* \param state: [struct] The function state
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param rate: The rate of absorption, in bytes
 * \param message: [const] The input message byte array
 * \param nblocks: The number of rate sized blocks to process
 */
-void sha3_blockupdate(sha3_state* state, size_t rate, const uint8_t* message, size_t nblocks);
+void sha3_blockupdate(keccak_state* state, size_t rate, const uint8_t* message, size_t nblocks);
 
 /**
 * \brief Finalize the message state and returns the hash value in output.
@@ -371,21 +371,21 @@ void sha3_blockupdate(sha3_state* state, size_t rate, const uint8_t* message, si
 * \warning The output array must be sized correctly corresponding to the absorbtion rate ((200 - rate) / 2). \n
 * Finalizes the message state, can not be used in consecutive calls.
 *
-* \param state: [struct] The function state; must be initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param rate: The rate of absorption, in bytes
 * \param message: [const] The input message byte array
 * \param msglen: The number of message bytes to process
 * \param output: The output byte array; receives the hash code
 */
-void sha3_finalize(sha3_state* state, size_t rate, const uint8_t* message, size_t msglen, uint8_t* output);
+void sha3_finalize(keccak_state* state, size_t rate, const uint8_t* message, size_t msglen, uint8_t* output);
 
 /**
 * \brief Initializes a SHA3 state structure, must be called before message processing.
 * Long form api: must be used in conjunction with the blockupdate and finalize functions.
 *
-* \param state: [struct] The function state
+* \param state: [struct] The function * \param state: [struct ref] A reference to the keccak state; must be initialized
 */
-void sha3_initialize(sha3_state* state);
+void sha3_initialize(keccak_state* state);
 
 /**
 * \brief The Keccak permute function.
@@ -396,14 +396,6 @@ void sha3_initialize(sha3_state* state);
 void keccak_permute(uint64_t* state);
 
 /* shake */
-
-/*! \struct shake_state
-* The SHAKE, cSHAKE, and Simple SHAKE, XOF state array
-*/
-typedef struct
-{
-	uint64_t state[SHAKE_STATE_SIZE];
-} shake_state;
 
 /**
 * \brief Key a SHAKE-128 instance, and generate an array of pseudo-random bytes.
@@ -426,11 +418,11 @@ void shake128(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keyl
 * \warning Finalizes the key state, should not be used in consecutive calls. \n
 * State must be initialized (and zeroed) by the caller.
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param key: The input key byte array
 * \param keylen: The number of key bytes to process
 */
-void shake128_initialize(shake_state* state, const uint8_t* key, size_t keylen);
+void shake128_initialize(keccak_state* state, const uint8_t* key, size_t keylen);
 
 /**
 * \brief The SHAKE-128 squeeze function.
@@ -439,11 +431,11 @@ void shake128_initialize(shake_state* state, const uint8_t* key, size_t keylen);
 *
 * \warning Output array must be initialized to a multiple of the byte rate.
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param output: The output byte array
 * \param nblocks: The number of blocks to extract
 */
-void shake128_squeezeblocks(shake_state* state, uint8_t* output, size_t nblocks);
+void shake128_squeezeblocks(keccak_state* state, uint8_t* output, size_t nblocks);
 
 /**
 * \brief Key a SHAKE-256 instance, and generate an array of pseudo-random bytes.
@@ -466,11 +458,11 @@ void shake256(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keyl
 * \warning Finalizes the key state, should not be used in consecutive calls. \n
 * State must be initialized (and zeroed) by the caller.
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param key: The input key byte array
 * \param keylen: The number of key bytes to process
 */
-void shake256_initialize(shake_state* state, const uint8_t* key, size_t keylen);
+void shake256_initialize(keccak_state* state, const uint8_t* key, size_t keylen);
 
 /**
 * \brief The SHAKE-256 squeeze function.
@@ -479,11 +471,11 @@ void shake256_initialize(shake_state* state, const uint8_t* key, size_t keylen);
 *
 * \warning Output array must be initialized to a multiple of the byte rate.
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param output: The output byte array
 * \param nblocks: The number of blocks to extract
 */
-void shake256_squeezeblocks(shake_state* state, uint8_t* output, size_t nblocks);
+void shake256_squeezeblocks(keccak_state* state, uint8_t* output, size_t nblocks);
 
 /**
 * \brief Key a SHAKE-512 instance, and generate an array of pseudo-random bytes.
@@ -506,11 +498,11 @@ void shake512(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keyl
 * \warning Finalizes the key state, should not be used in consecutive calls. \n
 * State must be initialized (and zeroed) by the caller.
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param key: The input key byte array
 * \param keylen: The number of key bytes to process
 */
-void shake512_initialize(shake_state* state, const uint8_t* key, size_t keylen);
+void shake512_initialize(keccak_state* state, const uint8_t* key, size_t keylen);
 
 /**
 * \brief The SHAKE-512 squeeze function.
@@ -519,11 +511,11 @@ void shake512_initialize(shake_state* state, const uint8_t* key, size_t keylen);
 *
 * \warning Output array must be initialized to a multiple of the byte rate.
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param output: The output byte array
 * \param nblocks: The number of blocks to extract
 */
-void shake512_squeezeblocks(shake_state* state, uint8_t* output, size_t nblocks);
+void shake512_squeezeblocks(keccak_state* state, uint8_t* output, size_t nblocks);
 
 /* cshake */
 
@@ -550,7 +542,7 @@ void cshake128(uint8_t* output, size_t outputlen, const uint8_t* key, size_t key
 *
 * \warning State must be initialized (and zeroed) by the caller.
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param key: The input key byte array
 * \param keylen: The number of key bytes to process
 * \param name: The function name string
@@ -558,7 +550,7 @@ void cshake128(uint8_t* output, size_t outputlen, const uint8_t* key, size_t key
 * \param custom: The customization string
 * \param customlen: The byte length of the customization string
 */
-void cshake128_initialize(shake_state* state, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t customlen);
+void cshake128_initialize(keccak_state* state, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t customlen);
 
 /**
 * \brief The cSHAKE-128 squeeze function.
@@ -567,11 +559,11 @@ void cshake128_initialize(shake_state* state, const uint8_t* key, size_t keylen,
 *
 * \warning Output array must be initialized to a multiple of the byte rate.
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param output: The output byte array
 * \param nblocks: The number of blocks to extract
 */
-void cshake128_squeezeblocks(shake_state* state, uint8_t* output, size_t nblocks);
+void cshake128_squeezeblocks(keccak_state* state, uint8_t* output, size_t nblocks);
 
 /**
 * \brief The cSHAKE-128 update function.
@@ -581,11 +573,11 @@ void cshake128_squeezeblocks(shake_state* state, uint8_t* output, size_t nblocks
 * \warning Finalizes the key state, should not be used in consecutive calls. \n
 * State must be initialized (and zeroed) by the caller.
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param key: The input key byte array
 * \param keylen: The number of key bytes to process
 */
-void cshake128_update(shake_state* state, const uint8_t* key, size_t keylen);
+void cshake128_update(keccak_state* state, const uint8_t* key, size_t keylen);
 
 /**
 * \brief Key a cSHAKE-256 instance and generate pseudo-random output.
@@ -611,7 +603,7 @@ void cshake256(uint8_t* output, size_t outputlen, const uint8_t* key, size_t key
 * \warning Finalizes the key state, should not be used in consecutive calls. \n
 * State must be initialized (and zeroed) by the caller.
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param key: The input key byte array
 * \param keylen: The number of key bytes to process
 * \param name: The function name string
@@ -619,7 +611,7 @@ void cshake256(uint8_t* output, size_t outputlen, const uint8_t* key, size_t key
 * \param custom: The customization string
 * \param customlen: The byte length of the customization string
 */
-void cshake256_initialize(shake_state* state, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t customlen);
+void cshake256_initialize(keccak_state* state, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t customlen);
 
 /**
 * \brief The cSHAKE-256 update function.
@@ -629,11 +621,11 @@ void cshake256_initialize(shake_state* state, const uint8_t* key, size_t keylen,
 * \warning Finalizes the key state, should not be used in consecutive calls. \n
 * State must be initialized (and zeroed) by the caller.
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param key: The input key byte array
 * \param keylen: The number of key bytes to process
 */
-void cshake256_update(shake_state* state, const uint8_t* key, size_t keylen);
+void cshake256_update(keccak_state* state, const uint8_t* key, size_t keylen);
 
 /**
 * \brief The cSHAKE-256 squeeze function.
@@ -642,11 +634,11 @@ void cshake256_update(shake_state* state, const uint8_t* key, size_t keylen);
 *
 * \warning Output array must be initialized to a multiple of the byte rate.
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param output: The output byte array
 * \param nblocks: The number of blocks to extract
 */
-void cshake256_squeezeblocks(shake_state* state, uint8_t* output, size_t nblocks);
+void cshake256_squeezeblocks(keccak_state* state, uint8_t* output, size_t nblocks);
 
 /**
 * \brief Key a cSHAKE-512 instance and generate pseudo-random output.
@@ -672,7 +664,7 @@ void cshake512(uint8_t* output, size_t outputlen, const uint8_t* key, size_t key
 * \warning Finalizes the key state, should not be used in consecutive calls. \n
 * State must be initialized (and zeroed) by the caller.
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param key: The input key byte array
 * \param keylen: The number of key bytes to process
 * \param name: The function name string
@@ -680,7 +672,7 @@ void cshake512(uint8_t* output, size_t outputlen, const uint8_t* key, size_t key
 * \param custom: The customization string
 * \param customlen: The byte length of the customization string
 */
-void cshake512_initialize(shake_state* state, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t customlen);
+void cshake512_initialize(keccak_state* state, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t customlen);
 
 /**
 * \brief The cSHAKE-512 update function.
@@ -690,11 +682,11 @@ void cshake512_initialize(shake_state* state, const uint8_t* key, size_t keylen,
 * \warning Finalizes the key state, should not be used in consecutive calls. \n
 * State must be initialized (and zeroed) by the caller.
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param key: The input key byte array
 * \param keylen: The number of key bytes to process
 */
-void cshake512_update(shake_state* state, const uint8_t* key, size_t keylen);
+void cshake512_update(keccak_state* state, const uint8_t* key, size_t keylen);
 
 /**
 * \brief The cSHAKE-512 squeeze function.
@@ -703,21 +695,13 @@ void cshake512_update(shake_state* state, const uint8_t* key, size_t keylen);
 *
 * \warning Output array must be initialized to a multiple of the byte rate.
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param output: The output byte array
 * \param nblocks: The number of blocks to extract
 */
-void cshake512_squeezeblocks(shake_state* state, uint8_t* output, size_t nblocks);
+void cshake512_squeezeblocks(keccak_state* state, uint8_t* output, size_t nblocks);
 
 /* kmac */
-
-/*! \struct kmac_state
-* The KMAC mac-digest state array
-*/
-typedef struct
-{
-	uint64_t state[KMAC_STATE_SIZE];
-} kmac_state;
 
 /**
 * \brief Key a KMAC-128 instance and generate a MAC code.
@@ -742,11 +726,11 @@ void kmac128(uint8_t* output, size_t outputlen, const uint8_t* message, size_t m
 *
 * \warning kmac128_initialize must be called before this function to key and initialize the state. \n
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param message: [const] The message input byte array
 * \param nblocks: The number of message byte blocks to process
 */
-void kmac128_blockupdate(kmac_state* state, const uint8_t* message, size_t nblocks);
+void kmac128_blockupdate(keccak_state* state, const uint8_t* message, size_t nblocks);
 
 /**
 * \brief The KMAC-128 finalize function.
@@ -755,26 +739,26 @@ void kmac128_blockupdate(kmac_state* state, const uint8_t* message, size_t nbloc
 *
 * \warning kmac128_initialize must be called before this function to key and initialize the state. \n
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param output: The output byte array
 * \param outputlen: The number of bytes to extract
 * \param message: [const] The message input byte array
 * \param msglen: The number of message bytes to process
 */
-void kmac128_finalize(kmac_state* state, uint8_t* output, size_t outputlen, const uint8_t* message, size_t msglen);
+void kmac128_finalize(keccak_state* state, uint8_t* output, size_t outputlen, const uint8_t* message, size_t msglen);
 
 /**
 * \brief Initialize a KMAC-128 instance.
 * Long form api: must be used in conjunction with the blockupdate and finalize functions.
 * Key the MAC generator and initialize the internal state.
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param key: The input key byte array
 * \param keylen: The number of key bytes to process
 * \param custom: The customization string
 * \param customlen: The byte length of the customization string
 */
-void kmac128_initialize(kmac_state* state, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen);
+void kmac128_initialize(keccak_state* state, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen);
 
 /**
 * \brief Key a KMAC-256 instance and generate a MAC code.
@@ -799,11 +783,11 @@ void kmac256(uint8_t* output, size_t outputlen, const uint8_t* message, size_t m
 *
 * \warning kmac256_initialize must be called before this function to key and initialize the state. \n
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param message: [const] The message input byte array
 * \param nblocks: The number of message byte blocks to process
 */
-void kmac256_blockupdate(kmac_state* state, const uint8_t* message, size_t nblocks);
+void kmac256_blockupdate(keccak_state* state, const uint8_t* message, size_t nblocks);
 
 /**
 * \brief The KMAC-256 finalize function.
@@ -812,26 +796,26 @@ void kmac256_blockupdate(kmac_state* state, const uint8_t* message, size_t nbloc
 *
 * \warning kmac256_initialize must be called before this function to key and initialize the state. \n
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param output: The output byte array
 * \param outputlen: The number of bytes to extract
 * \param message: [const] The message input byte array
 * \param msglen: The number of message bytes to process
 */
-void kmac256_finalize(kmac_state* state, uint8_t* output, size_t outputlen, const uint8_t* message, size_t msglen);
+void kmac256_finalize(keccak_state* state, uint8_t* output, size_t outputlen, const uint8_t* message, size_t msglen);
 
 /**
 * \brief Initialize a KMAC-256 instance.
 * Long form api: must be used in conjunction with the blockupdate and finalize functions.
 * Key the MAC generator and initialize the internal state.
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param key: The input key byte array
 * \param keylen: The number of key bytes to process
 * \param custom: The customization string
 * \param customlen: The byte length of the customization string
 */
-void kmac256_initialize(kmac_state* state, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen);
+void kmac256_initialize(keccak_state* state, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen);
 
 /**
 * \brief Key a KMAC-512 instance and generate a MAC code.
@@ -856,11 +840,11 @@ void kmac512(uint8_t* output, size_t outputlen, const uint8_t* message, size_t m
 *
 * \warning kmac512_initialize must be called before this function to key and initialize the state. \n
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param message: [const] The message input byte array
 * \param nblocks: The number of message byte blocks to process
 */
-void kmac512_blockupdate(kmac_state* state, const uint8_t* message, size_t nblocks);
+void kmac512_blockupdate(keccak_state* state, const uint8_t* message, size_t nblocks);
 
 /**
 * \brief The KMAC-512 finalize function.
@@ -869,25 +853,25 @@ void kmac512_blockupdate(kmac_state* state, const uint8_t* message, size_t nbloc
 *
 * \warning kmac512_initialize must be called before this function to key and initialize the state. \n
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param output: The output byte array
 * \param outputlen: The number of bytes to extract
 * \param message: [const] The message input byte array
 * \param msglen: The number of message bytes to process
 */
-void kmac512_finalize(kmac_state* state, uint8_t* output, size_t outputlen, const uint8_t* message, size_t msglen);
+void kmac512_finalize(keccak_state* state, uint8_t* output, size_t outputlen, const uint8_t* message, size_t msglen);
 
 /**
 * \brief Initialize a KMAC-512 instance.
 * Long form api: must be used in conjunction with the blockupdate and finalize functions.
 * Key the MAC generator and initialize the internal state.
 *
-* \param state: [struct] The function state; must be pre-initialized
+* \param state: [struct ref] A reference to the keccak state; must be initialized
 * \param key: The input key byte array
 * \param keylen: The number of key bytes to process
 * \param custom: The customization string
 * \param customlen: The byte length of the customization string
 */
-void kmac512_initialize(kmac_state* state, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen);
+void kmac512_initialize(keccak_state* state, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen);
 
 #endif
