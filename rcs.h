@@ -141,6 +141,7 @@
 #define QSC_RCS_H
 
 #include "common.h"
+#include "sha3.h"
 
 /***********************************
 *    USER CONFIGURABLE SETTINGS    *
@@ -163,13 +164,6 @@
 #		include <x86intrin.h>
 #	endif
 #endif
-
-/*!
-\def RCS_HMAC_EXTENSION
-* Enables the HMAC authentication extensions for the cipher (alternate mode of opeauthenticationration).
-* The default is undefined, and the default KMAC authentication is enabled.
-*/
-//#define RCS_HMAC_EXTENSION
 
 /***********************************
 *     RCS CONSTANTS AND SIZES      *
@@ -255,9 +249,10 @@ typedef struct
 #endif
 	size_t roundkeylen;				/*!< The round-key array length */
 	size_t rounds;					/*!< The number of transformation rounds */
+	keccak_state kstate;			/*!< The keccak state structure */
 	uint8_t* nonce;					/*!< The nonce or initialization vector */
 	uint64_t counter;				/*!< the processed bytes counter */
-	uint8_t mkey[128];				/*!< the mac generators key array */
+	uint8_t mkey[64];				/*!< the mac generators key array */
 	size_t mkeylen;					/*!< the mac key array length */
 	const uint8_t* custom;			/*!< the customization array */
 	size_t custlen;					/*!< the customization array length */

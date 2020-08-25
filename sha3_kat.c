@@ -297,7 +297,7 @@ bool shake_128_kat_test()
 	/* test compact api */
 
 	clear8(output, sizeof(output));
-	shake128(output, sizeof(output), msg0, 0);
+	shake128_compute(output, sizeof(output), msg0, 0);
 
 	if (are_equal8(output, exp0, sizeof(exp0)) == false)
 	{
@@ -305,7 +305,7 @@ bool shake_128_kat_test()
 	}
 
 	clear8(output, sizeof(output));
-	shake128(output, sizeof(output), msg1600, sizeof(msg1600));
+	shake128_compute(output, sizeof(output), msg1600, sizeof(msg1600));
 
 	if (are_equal8(output, exp1600, sizeof(exp1600)) == false)
 	{
@@ -385,7 +385,7 @@ bool shake_256_kat_test()
 	/* test compact api */
 
 	clear8(output, sizeof(output));
-	shake256(output, sizeof(output), msg0, 0);
+	shake256_compute(output, sizeof(output), msg0, 0);
 
 	if (are_equal8(output, exp0, sizeof(exp0)) == false)
 	{
@@ -393,7 +393,7 @@ bool shake_256_kat_test()
 	}
 
 	clear8(output, sizeof(output));
-	shake256(output, sizeof(output), msg1600, sizeof(msg1600));
+	shake256_compute(output, sizeof(output), msg1600, sizeof(msg1600));
 
 	if (are_equal8(output, exp1600, sizeof(exp1600)) == false)
 	{
@@ -476,7 +476,7 @@ bool shake_512_kat_test()
 	/* test compact api */
 
 	clear8(output, sizeof(output));
-	shake512(output, sizeof(output), msg1, sizeof(msg1));
+	shake512_compute(output, sizeof(output), msg1, sizeof(msg1));
 
 	if (are_equal8(output, exp1, sizeof(exp1)) == false)
 	{
@@ -484,7 +484,7 @@ bool shake_512_kat_test()
 	}
 
 	clear8(output, sizeof(output));
-	shake512(output, sizeof(output), msg2, sizeof(msg2));
+	shake512_compute(output, sizeof(output), msg2, sizeof(msg2));
 
 	if (are_equal8(output, exp2, sizeof(exp2)) == false)
 	{
@@ -537,7 +537,7 @@ bool cshake_128_kat_test()
 
 	/* test compact api */
 
-	cshake128(output, sizeof(output), msg32, sizeof(msg32), name, 0, cust, sizeof(cust));
+	cshake128_compute(output, sizeof(output), msg32, sizeof(msg32), name, 0, cust, sizeof(cust));
 
 	if (are_equal8(output, exp256a, sizeof(exp256a)) == false)
 	{
@@ -545,7 +545,7 @@ bool cshake_128_kat_test()
 	}
 
 	clear8(output, sizeof(output));
-	cshake128(output, sizeof(output), msg1600, sizeof(msg1600), name, 0, cust, sizeof(cust));
+	cshake128_compute(output, sizeof(output), msg1600, sizeof(msg1600), name, 0, cust, sizeof(cust));
 
 	if (are_equal8(output, exp256b, sizeof(exp256b)) == false)
 	{
@@ -600,7 +600,7 @@ bool cshake_256_kat_test()
 
 	/* test compact api */
 
-	cshake256(output, sizeof(output), msg32, sizeof(msg32), name, 0, cust, sizeof(cust));
+	cshake256_compute(output, sizeof(output), msg32, sizeof(msg32), name, 0, cust, sizeof(cust));
 
 	if (are_equal8(output, exp512a, sizeof(exp512a)) == false)
 	{
@@ -608,7 +608,7 @@ bool cshake_256_kat_test()
 	}
 
 	clear8(output, sizeof(output));
-	cshake256(output, sizeof(output), msg1600, sizeof(msg1600), name, 0, cust, sizeof(cust));
+	cshake256_compute(output, sizeof(output), msg1600, sizeof(msg1600), name, 0, cust, sizeof(cust));
 
 	if (are_equal8(output, exp512b, sizeof(exp512b)) == false)
 	{
@@ -652,7 +652,7 @@ bool cshake_512_kat_test()
 
 	/* test compact api */
 
-	cshake512(output, sizeof(output), msg512, sizeof(msg512), NULL, 0, cust, sizeof(cust));
+	cshake512_compute(output, sizeof(output), msg512, sizeof(msg512), NULL, 0, cust, sizeof(cust));
 
 	if (are_equal8(output, exp512, sizeof(exp512)) == false)
 	{
@@ -710,7 +710,7 @@ bool kmac_128_kat_test()
 
 	/* test compact api */
 
-	kmac128(output, sizeof(output), msg32, sizeof(msg32), key256, sizeof(key256), cust0, 0);
+	kmac128_compute(output, sizeof(output), msg32, sizeof(msg32), key256, sizeof(key256), cust0, 0, NULL, 0);
 
 	if (are_equal8(output, exp256a, sizeof(exp256a)) == false)
 	{
@@ -718,7 +718,7 @@ bool kmac_128_kat_test()
 	}
 
 	clear8(output, sizeof(output));
-	kmac128(output, sizeof(output), msg32, sizeof(msg32), key256, sizeof(key256), cust168, sizeof(cust168));
+	kmac128_compute(output, sizeof(output), msg32, sizeof(msg32), key256, sizeof(key256), cust168, sizeof(cust168), NULL, 0);
 
 	if (are_equal8(output, exp256b, sizeof(exp256b)) == false)
 	{
@@ -726,7 +726,7 @@ bool kmac_128_kat_test()
 	}
 
 	clear8(output, sizeof(output));
-	kmac128(output, sizeof(output), msg1600, sizeof(msg1600), key256, sizeof(key256), cust168, sizeof(cust168));
+	kmac128_compute(output, sizeof(output), msg1600, sizeof(msg1600), key256, sizeof(key256), cust168, sizeof(cust168), NULL, 0);
 
 	if (are_equal8(output, exp256c, sizeof(exp256c)) == false)
 	{
@@ -738,7 +738,7 @@ bool kmac_128_kat_test()
 	clear64(state.state, KMAC_STATE_SIZE);
 	clear8(output, sizeof(output));
 
-	kmac128_initialize(&state, key256, sizeof(key256), cust168, sizeof(cust168));
+	kmac128_initialize(&state, key256, sizeof(key256), cust168, sizeof(cust168), NULL, 0);
 	kmac128_blockupdate(&state, msg1600, 1);
 	kmac128_finalize(&state, output, sizeof(output), msg1600 + CSHAKE_128_RATE, (SHAKE_STATE_SIZE * sizeof(uint64_t)) - CSHAKE_128_RATE);
 
@@ -788,7 +788,7 @@ bool kmac_256_kat_test()
 
 	/* test compact api */
 
-	kmac256(output, sizeof(output), msg32, sizeof(msg32), key256, sizeof(key256), cust168, sizeof(cust168));
+	kmac256_compute(output, sizeof(output), msg32, sizeof(msg32), key256, sizeof(key256), cust168, sizeof(cust168), NULL, 0);
 
 	if (are_equal8(output, exp256a, sizeof(exp256a)) == false)
 	{
@@ -796,7 +796,7 @@ bool kmac_256_kat_test()
 	}
 
 	clear8(output, sizeof(output));
-	kmac256(output, sizeof(output), msg1600, sizeof(msg1600), key256, sizeof(key256), cust0, 0);
+	kmac256_compute(output, sizeof(output), msg1600, sizeof(msg1600), key256, sizeof(key256), cust0, 0, NULL, 0);
 
 	if (are_equal8(output, exp256b, sizeof(exp256b)) == false)
 	{
@@ -804,7 +804,7 @@ bool kmac_256_kat_test()
 	}
 
 	clear8(output, sizeof(output));
-	kmac256(output, sizeof(output), msg1600, sizeof(msg1600), key256, sizeof(key256), cust168, sizeof(cust168));
+	kmac256_compute(output, sizeof(output), msg1600, sizeof(msg1600), key256, sizeof(key256), cust168, sizeof(cust168), NULL, 0);
 
 	if (are_equal8(output, exp256c, sizeof(exp256c)) == false)
 	{
@@ -816,7 +816,7 @@ bool kmac_256_kat_test()
 	clear64(state.state, KMAC_STATE_SIZE);
 	clear8(output, sizeof(output));
 
-	kmac256_initialize(&state, key256, sizeof(key256), cust168, sizeof(cust168));
+	kmac256_initialize(&state, key256, sizeof(key256), cust168, sizeof(cust168), NULL, 0);
 	kmac256_blockupdate(&state, msg1600, 1);
 	kmac256_finalize(&state, output, sizeof(output), msg1600 + CSHAKE_256_RATE, (SHAKE_STATE_SIZE * sizeof(uint64_t)) - CSHAKE_256_RATE);
 
@@ -870,7 +870,7 @@ bool kmac_512_kat_test()
 
 	/* test compact api */
 
-	kmac512(output, sizeof(output), msg0, sizeof(msg0), key0, sizeof(key0), cust0, sizeof(cust0));
+	kmac512_compute(output, sizeof(output), msg0, sizeof(msg0), key0, sizeof(key0), cust0, sizeof(cust0), NULL, 0);
 
 	if (are_equal8(output, exp0, sizeof(exp0)) == false)
 	{
@@ -878,7 +878,7 @@ bool kmac_512_kat_test()
 	}
 
 	clear8(output, sizeof(output));
-	kmac512(output, sizeof(output), msg0, sizeof(msg0), key1, sizeof(key1), cust2, sizeof(cust2));
+	kmac512_compute(output, sizeof(output), msg0, sizeof(msg0), key1, sizeof(key1), cust2, sizeof(cust2), NULL, 0);
 
 	if (are_equal8(output, exp1, sizeof(exp1)) == false)
 	{
@@ -886,7 +886,7 @@ bool kmac_512_kat_test()
 	}
 
 	clear8(output, sizeof(output));
-	kmac512(output, sizeof(output), msg1, sizeof(msg1), key0, sizeof(key0), cust1, sizeof(cust1));
+	kmac512_compute(output, sizeof(output), msg1, sizeof(msg1), key0, sizeof(key0), cust1, sizeof(cust1), NULL, 0);
 
 	if (are_equal8(output, exp2, sizeof(exp2)) == false)
 	{
@@ -898,7 +898,7 @@ bool kmac_512_kat_test()
 	clear64(state.state, KMAC_STATE_SIZE);
 	clear8(output, sizeof(output));
 
-	kmac512_initialize(&state, key0, sizeof(key0), cust1, sizeof(cust1));
+	kmac512_initialize(&state, key0, sizeof(key0), cust1, sizeof(cust1), NULL, 0);
 	kmac512_blockupdate(&state, msg1, 1);
 	kmac512_finalize(&state, output, sizeof(output), msg1 + CSHAKE_512_RATE, sizeof(msg1) - CSHAKE_512_RATE);
 

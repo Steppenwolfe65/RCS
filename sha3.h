@@ -408,7 +408,7 @@ void keccak_permute(uint64_t* state);
 * \param key: The input key byte array
 * \param keylen: The number of key bytes to process
 */
-void shake128(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen);
+void shake128_compute(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen);
 
 /**
 * \brief The SHAKE-128 initialize function.
@@ -448,7 +448,7 @@ void shake128_squeezeblocks(keccak_state* state, uint8_t* output, size_t nblocks
 * \param key: The input key byte array
 * \param keylen: The number of key bytes to process
 */
-void shake256(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen);
+void shake256_compute(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen);
 
 /**
 * \brief The SHAKE-256 initialize function.
@@ -488,7 +488,7 @@ void shake256_squeezeblocks(keccak_state* state, uint8_t* output, size_t nblocks
 * \param key: The input key byte array
 * \param keylen: The number of key bytes to process
 */
-void shake512(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen);
+void shake512_compute(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen);
 
 /**
 * \brief The SHAKE-512 initialize function.
@@ -533,7 +533,7 @@ void shake512_squeezeblocks(keccak_state* state, uint8_t* output, size_t nblocks
 * \param custom: The customization string
 * \param customlen: The byte length of the customization string
 */
-void cshake128(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t customlen);
+void cshake128_compute(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t customlen);
 
 /**
 * \brief The cSHAKE-128 initialize function.
@@ -593,7 +593,7 @@ void cshake128_update(keccak_state* state, const uint8_t* key, size_t keylen);
 * \param custom: The customization string
 * \param customlen: The byte length of the customization string
 */
-void cshake256(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t customlen);
+void cshake256_compute(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t customlen);
 
 /**
 * \brief The cSHAKE-256 initialize function.
@@ -654,7 +654,7 @@ void cshake256_squeezeblocks(keccak_state* state, uint8_t* output, size_t nblock
 * \param custom: The customization string
 * \param customlen: The byte length of the customization string
 */
-void cshake512(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t customlen);
+void cshake512_compute(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t customlen);
 
 /**
 * \brief The cSHAKE-512 initialize function.
@@ -716,8 +716,10 @@ void cshake512_squeezeblocks(keccak_state* state, uint8_t* output, size_t nblock
 * \param keylen: The number of key bytes to process
 * \param custom: The customization string
 * \param customlen: The byte length of the customization string
+* \param name: The function name string
+* \param namelen: The byte length of the function name
 */
-void kmac128(uint8_t* output, size_t outputlen, const uint8_t* message, size_t msglen, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen);
+void kmac128_compute(uint8_t* output, size_t outputlen, const uint8_t* message, size_t msglen, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen, const uint8_t* name, size_t namelen);
 
 /**
 * \brief The KMAC-128 block update function.
@@ -757,8 +759,10 @@ void kmac128_finalize(keccak_state* state, uint8_t* output, size_t outputlen, co
 * \param keylen: The number of key bytes to process
 * \param custom: The customization string
 * \param customlen: The byte length of the customization string
+* \param name: The function name string
+* \param namelen: The byte length of the function name
 */
-void kmac128_initialize(keccak_state* state, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen);
+void kmac128_initialize(keccak_state* state, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen, const uint8_t* name, size_t namelen);
 
 /**
 * \brief Key a KMAC-256 instance and generate a MAC code.
@@ -773,8 +777,10 @@ void kmac128_initialize(keccak_state* state, const uint8_t* key, size_t keylen, 
 * \param keylen: The number of key bytes to process
 * \param custom: The customization string
 * \param customlen: The byte length of the customization string
+* \param name: The function name string
+* \param namelen: The byte length of the function name
 */
-void kmac256(uint8_t* output, size_t outputlen, const uint8_t* message, size_t msglen, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen);
+void kmac256_compute(uint8_t* output, size_t outputlen, const uint8_t* message, size_t msglen, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen, const uint8_t* name, size_t namelen);
 
 /**
 * \brief The KMAC-256 block update function.
@@ -814,8 +820,10 @@ void kmac256_finalize(keccak_state* state, uint8_t* output, size_t outputlen, co
 * \param keylen: The number of key bytes to process
 * \param custom: The customization string
 * \param customlen: The byte length of the customization string
+* \param name: The function name string
+* \param namelen: The byte length of the function name
 */
-void kmac256_initialize(keccak_state* state, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen);
+void kmac256_initialize(keccak_state* state, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen, const uint8_t* name, size_t namelen);
 
 /**
 * \brief Key a KMAC-512 instance and generate a MAC code.
@@ -830,8 +838,10 @@ void kmac256_initialize(keccak_state* state, const uint8_t* key, size_t keylen, 
 * \param keylen: The number of key bytes to process
 * \param custom: The customization string
 * \param customlen: The byte length of the customization string
+* \param name: The function name string
+* \param namelen: The byte length of the function name
 */
-void kmac512(uint8_t* output, size_t outputlen, const uint8_t* message, size_t msglen, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen);
+void kmac512_compute(uint8_t* output, size_t outputlen, const uint8_t* message, size_t msglen, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen, const uint8_t* name, size_t namelen);
 
 /**
 * \brief The KMAC-512 block update function.
@@ -871,7 +881,9 @@ void kmac512_finalize(keccak_state* state, uint8_t* output, size_t outputlen, co
 * \param keylen: The number of key bytes to process
 * \param custom: The customization string
 * \param customlen: The byte length of the customization string
+* \param name: The function name string
+* \param namelen: The byte length of the function name
 */
-void kmac512_initialize(keccak_state* state, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen);
+void kmac512_initialize(keccak_state* state, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen, const uint8_t* name, size_t namelen);
 
 #endif

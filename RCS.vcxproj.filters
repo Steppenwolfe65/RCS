@@ -33,9 +33,6 @@
     <ClInclude Include="rcs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="sha2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="sha3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -43,9 +40,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="rcs_kat.h">
-      <Filter>Header Files\Tests</Filter>
-    </ClInclude>
-    <ClInclude Include="sha2_kat.h">
       <Filter>Header Files\Tests</Filter>
     </ClInclude>
     <ClInclude Include="sha3_kat.h">
@@ -62,9 +56,6 @@
     <ClCompile Include="rcs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sha2.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sha3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -77,13 +68,10 @@
     <ClCompile Include="rcs_test.c">
       <Filter>Source Files\Tests</Filter>
     </ClCompile>
-    <ClCompile Include="sha2_kat.c">
+    <ClCompile Include="testutils.c">
       <Filter>Source Files\Tests</Filter>
     </ClCompile>
     <ClCompile Include="sha3_kat.c">
-      <Filter>Source Files\Tests</Filter>
-    </ClCompile>
-    <ClCompile Include="testutils.c">
       <Filter>Source Files\Tests</Filter>
     </ClCompile>
   </ItemGroup>

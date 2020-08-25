@@ -1,6 +1,7 @@
 #ifndef QSC_COMMON_H
 #define QSC_COMMON_H
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>

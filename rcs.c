@@ -1,10 +1,5 @@
 #include "rcs.h"
 #include "intutils.h"
-#include "sha3.h"
-#ifdef RCS_HMAC_EXTENSION
-#	include "sha2.h"
-#endif
-#include <assert.h>
 #include <stdlib.h>
 
 /*!
@@ -60,21 +55,13 @@
 \def RCS256_MKEY_LENGTH
 * The size of the hba-rhx256 mac key array
 */
-#if defined(RCS_HMAC_EXTENSION)
-#	define RCS256_MKEY_LENGTH 64
-#else
-#	define RCS256_MKEY_LENGTH 32
-#endif
+#define RCS256_MKEY_LENGTH 32
 
 /*!
 \def RCS512_MKEY_LENGTH
 * The size of the hba-rhx512 mac key array
 */
-#if defined(RCS_HMAC_EXTENSION)
-#	define RCS512_MKEY_LENGTH 128
-#else
-#	define RCS512_MKEY_LENGTH 64
-#endif
+#define RCS512_MKEY_LENGTH 64
 
 /*!
 \def RCS_NAME_LENGTH
@@ -101,33 +88,17 @@ static const uint8_t RCS_HKDF256_INFO[7] = { 82, 72, 88, 72, 50, 53, 54 };
 static const uint8_t RCS_HKDF512_INFO[7] = { 82, 72, 88, 72, 53, 49, 50 };
 #endif
 
-#ifdef RCS_HMAC_EXTENSION
-	static const uint8_t rcs256_name[RCS_NAME_LENGTH] =
-	{
-		0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x52, 0x43, 0x53, 0x48, 0x32, 0x35,
-		0x36
-	};
-#else
-	static const uint8_t rcs256_name[RCS_NAME_LENGTH] =
-	{
-		0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x52, 0x43, 0x53, 0x4B, 0x32, 0x35,
-		0x36
-	};
-#endif
-
-#ifdef RCS_HMAC_EXTENSION
-static const uint8_t rcs512_name[RCS_NAME_LENGTH] =
+static const uint8_t rcs256_name[RCS_NAME_LENGTH] =
 {
-	0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x52, 0x43, 0x53, 0x48, 0x35, 0x31,
-	0x32
+	0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x52, 0x43, 0x53, 0x4B, 0x32, 0x35,
+	0x36
 };
-#else
+
 static const uint8_t rcs512_name[RCS_NAME_LENGTH] =
 {
 	0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x52, 0x43, 0x53, 0x4B, 0x35, 0x31,
 	0x32
 };
-#endif
 
 /* aes-ni and table-based fallback functions */
 
@@ -503,93 +474,75 @@ static void rcs_ctr_transform(rcs_state* state, uint8_t* output, const uint8_t* 
 
 static bool rcs_finalize(rcs_state* state, uint8_t* output, const uint8_t* input, size_t inputlen, uint8_t* ncopy)
 {
-	uint8_t* minp;
+	uint8_t* pmsg;
 	uint64_t mctr;
-	const size_t TLEN = RCS_BLOCK_SIZE + inputlen + state->aadlen + sizeof(uint64_t);
+	size_t CPTLEN = RCS_BLOCK_SIZE + inputlen + state->aadlen + sizeof(uint64_t);
+	size_t mlen;
+	size_t poff;
 	bool res;
 
 	res = false;
 	mctr = 0;
+	poff = 0;
 
 	/* allocate the input array */
-	minp = (uint8_t*)malloc(TLEN);
+	pmsg = (uint8_t*)malloc(CPTLEN);
 
-	if (minp != (uint8_t*)0)
+	if (pmsg != (uint8_t*)0)
 	{
-		memset(minp, 0x00, TLEN);
-		memcpy(minp, ncopy, RCS_BLOCK_SIZE);
+		memset(pmsg, 0x00, CPTLEN);
+
+		/* copy the nonce */
+		memcpy(pmsg, ncopy, RCS_BLOCK_SIZE);
 
 		/* copy the ciphertext, aad, and mac counter to the buffer array */
 		if (inputlen != 0)
 		{
-			memcpy(minp + RCS_BLOCK_SIZE, input, inputlen);
+			memcpy(pmsg + RCS_BLOCK_SIZE, input, inputlen);
 		}
 
 		if (state->aadlen != 0)
 		{
-			memcpy(minp + RCS_BLOCK_SIZE + inputlen, state->aad, state->aadlen);
-
-			/* additional data is cleared after every finalization call */
-			memset(state->aad, 0x00, state->aadlen);
-			state->aadlen = 0;
+			memcpy(pmsg + RCS_BLOCK_SIZE + inputlen, state->aad, state->aadlen);
 		}
 
 		/* add the nonce, input, and aad sizes to the counter */
 		mctr = RCS_BLOCK_SIZE + state->counter + state->aadlen + sizeof(uint64_t);
+
 		/* append the counter to the end of the mac input array */
-		le64to8(minp + RCS_BLOCK_SIZE + inputlen + state->aadlen, mctr);
+		le64to8(pmsg + RCS_BLOCK_SIZE + inputlen + state->aadlen, mctr);
+
+		state->aadlen = 0;
+		mlen = CPTLEN;
 
 		if (state->ctype == RCS256)
 		{
-#ifdef RCS_HMAC_EXTENSION
 			/* mac the data and add the code to the end of the cipher-text output array */
-			hmac256_compute(output, minp, TLEN, state->mkey, state->mkeylen);
-#else
-			/* mac the data and add the code to the end of the cipher-text output array */
-			kmac256(output, RCS256_MAC_LENGTH, minp, TLEN, state->mkey, state->mkeylen, NULL, 0);
-#endif
+			if (mlen >= KMAC_256_RATE)
+			{
+				const size_t RNDLEN = (mlen / KMAC_256_RATE) * KMAC_256_RATE;
+				kmac256_blockupdate(&state->kstate, pmsg, RNDLEN / KMAC_256_RATE);
+				mlen -= RNDLEN;
+				poff += RNDLEN;
+			}
+
+			kmac256_finalize(&state->kstate, output, RCS256_MAC_LENGTH, pmsg + poff, mlen);
 		}
 		else
 		{
-#ifdef RCS_HMAC_EXTENSION
-			/* mac the data and add the code to the end of the cipher-text output array */
-			hmac512_compute(output, minp, TLEN, state->mkey, state->mkeylen);
-#else
-			/* mac the data and add the code to the end of the cipher-text output array */
-			kmac512(output, RCS512_MAC_LENGTH, minp, TLEN, state->mkey, state->mkeylen, NULL, 0);
-#endif
+			if (mlen >= KMAC_512_RATE)
+			{
+				const size_t RNDLEN = (mlen / KMAC_512_RATE) * KMAC_512_RATE;
+				kmac512_blockupdate(&state->kstate, pmsg, RNDLEN / KMAC_512_RATE);
+				mlen -= RNDLEN;
+				poff += RNDLEN;
+			}
+
+			kmac512_finalize(&state->kstate, output, RCS512_MAC_LENGTH, pmsg + poff, mlen);
 		}
 
-		clear8(minp, TLEN);
-		free(minp);
-
-		/* generate the new mac key */
-		if (state->ctype == RCS256)
-		{
-			/* generate the new mac key */
-			uint8_t tmpn[RCS_NAME_LENGTH] = { 0 };
-			uint8_t tmpk[RCS256_MKEY_LENGTH] = { 0 };
-
-			memcpy(tmpn, rcs256_name, RCS_NAME_LENGTH);
-			/* add 1 + the nonce, and last input size */
-			/* append the counter to the end of the mac input array */
-			le64to8(tmpn, state->counter);
-
-			/* generate the key and copy to state */
-			cshake256(tmpk, RCS256_MKEY_LENGTH, state->mkey, state->mkeylen, tmpn, RCS_NAME_LENGTH, state->custom, state->custlen);
-			memcpy(state->mkey, tmpk, sizeof(tmpk));
-		}
-		else
-		{
-			uint8_t tmpn[RCS_NAME_LENGTH] = { 0 };
-			uint8_t tmpk[RCS512_MKEY_LENGTH] = { 0 };
-
-			memcpy(tmpn, rcs512_name, RCS_NAME_LENGTH);
-			le64to8(tmpn, state->counter);
-
-			cshake512(tmpk, RCS512_MKEY_LENGTH, state->mkey, state->mkeylen, tmpn, RCS_NAME_LENGTH, state->custom, state->custlen);
-			memcpy(state->mkey, tmpk, sizeof(tmpk));
-		}
+		clear8(pmsg, CPTLEN);
+		free(pmsg);
 
 		res = true;
 	}
@@ -735,6 +688,7 @@ void rcs_initialize(rcs_state* state, const rcs_keyparams* keyparams, bool encry
 		state->roundkeylen = RCS256_ROUNDKEY_SIZE;
 		state->rounds = 22;
 		state->mkeylen = RCS256_MKEY_LENGTH;
+
 	}
 	else
 	{
@@ -746,6 +700,15 @@ void rcs_initialize(rcs_state* state, const rcs_keyparams* keyparams, bool encry
 
 	/* generate the cipher and mac keys */
 	rcs_secure_expand(state, keyparams);
+
+	if (state->ctype == RCS256)
+	{
+		kmac256_initialize(&state->kstate, state->mkey, state->mkeylen, NULL, 0, NULL, 0);
+	}
+	else
+	{
+		kmac512_initialize(&state->kstate, state->mkey, state->mkeylen, NULL, 0, NULL, 0);
+	}
 }
 
 void rcs_set_associated(rcs_state* state, uint8_t* data, size_t datalen)

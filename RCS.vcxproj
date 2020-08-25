@@ -24,8 +24,6 @@
     <ClInclude Include="intutils.h" />
     <ClInclude Include="rcs.h" />
     <ClInclude Include="rcs_kat.h" />
-    <ClInclude Include="sha2.h" />
-    <ClInclude Include="sha2_kat.h" />
     <ClInclude Include="sha3.h" />
     <ClInclude Include="sha3_kat.h" />
     <ClInclude Include="sysrand.h" />
@@ -36,8 +34,6 @@
     <ClCompile Include="rcs.c" />
     <ClCompile Include="rcs_kat.c" />
     <ClCompile Include="rcs_test.c" />
-    <ClCompile Include="sha2.c" />
-    <ClCompile Include="sha2_kat.c" />
     <ClCompile Include="sha3.c" />
     <ClCompile Include="sha3_kat.c" />
     <ClCompile Include="sysrand.c" />

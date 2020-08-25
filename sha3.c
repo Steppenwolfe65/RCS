@@ -2760,7 +2760,7 @@ void sha3_initialize(keccak_state* state)
 
 /* shake */
 
-void shake128(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen)
+void shake128_compute(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen)
 {
 	const size_t nblocks = outputlen / SHAKE_128_RATE;
 	keccak_state state;
@@ -2795,7 +2795,7 @@ void shake128_squeezeblocks(keccak_state* state, uint8_t* output, size_t nblocks
 	keccak_squeezeblocks(state->state, output, nblocks, SHAKE_128_RATE);
 }
 
-void shake256(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen)
+void shake256_compute(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen)
 {
 	const size_t nblocks = outputlen / SHAKE_256_RATE;
 	keccak_state state;
@@ -2830,7 +2830,7 @@ void shake256_squeezeblocks(keccak_state* state, uint8_t* output, size_t nblocks
 	keccak_squeezeblocks(state->state, output, nblocks, SHAKE_256_RATE);
 }
 
-void shake512(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen)
+void shake512_compute(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen)
 {
 	const size_t nblocks = outputlen / SHAKE_512_RATE;
 	keccak_state state;
@@ -2867,7 +2867,7 @@ void shake512_squeezeblocks(keccak_state* state, uint8_t* output, size_t nblocks
 
 /* cshake */
 
-void cshake128(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t customlen)
+void cshake128_compute(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t customlen)
 {
 	const size_t nblocks = outputlen / CSHAKE_128_RATE;
 	keccak_state state;
@@ -2977,7 +2977,7 @@ void cshake128_update(keccak_state* state, const uint8_t* key, size_t keylen)
 	keccak_absorb(state->state, CSHAKE_128_RATE, key, keylen, CSHAKE_DOMAIN_ID);
 }
 
-void cshake256(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t customlen)
+void cshake256_compute(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t customlen)
 {
 	const size_t nblocks = outputlen / CSHAKE_256_RATE;
 	keccak_state kstate;
@@ -3087,7 +3087,7 @@ void cshake256_update(keccak_state* state, const uint8_t* key, size_t keylen)
 	keccak_absorb(state->state, CSHAKE_256_RATE, key, keylen, CSHAKE_DOMAIN_ID);
 }
 
-void cshake512(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t customlen)
+void cshake512_compute(uint8_t* output, size_t outputlen, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t customlen)
 {
 	const size_t nblocks = outputlen / CSHAKE_512_RATE;
 	keccak_state state;
@@ -3199,12 +3199,12 @@ void cshake512_update(keccak_state* state, const uint8_t* key, size_t keylen)
 
 /* kmac */
 
-void kmac128(uint8_t* output, size_t outputlen, const uint8_t* message, size_t msglen, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen)
+void kmac128_compute(uint8_t* output, size_t outputlen, const uint8_t* message, size_t msglen, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen, const uint8_t* name, size_t namelen)
 {
 	keccak_state state;
 
 	clear64(state.state, KMAC_STATE_SIZE);
-	kmac128_initialize(&state, key, keylen, custom, customlen);
+	kmac128_initialize(&state, key, keylen, custom, customlen, name, namelen);
 
 	if (msglen >= KMAC_128_RATE)
 	{
@@ -3286,10 +3286,11 @@ void kmac128_finalize(keccak_state* state, uint8_t* output, size_t outputlen, co
 	}
 }
 
-void kmac128_initialize(keccak_state* state, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen)
+void kmac128_initialize(keccak_state* state, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen, const uint8_t* name, size_t namelen)
 {
 	uint8_t pad[KMAC_STATE_SIZE * sizeof(uint64_t)] = { 0 };
-	const uint8_t name[] = { 0x4B, 0x4D, 0x41, 0x43 };
+	const uint8_t defn[] = { 0x4B, 0x4D, 0x41, 0x43 };
+	const uint8_t* pname;
 	size_t offset;
 	size_t i;
 	size_t j;
@@ -3298,15 +3299,25 @@ void kmac128_initialize(keccak_state* state, const uint8_t* key, size_t keylen, 
 
 	/* stage 1: name + custom */
 
-	offset = left_encode(pad, KMAC_128_RATE);
-	offset += left_encode(pad + offset, sizeof(name) * 8);
-
-	for (i = 0; i < sizeof(name); ++i)
+	if (namelen == 0)
 	{
-		pad[offset + i] = name[i];
+		pname = defn;
+		namelen = sizeof(defn);
+	}
+	else
+	{
+		pname = name;
 	}
 
-	offset += sizeof(name);
+	offset = left_encode(pad, KMAC_128_RATE);
+	offset += left_encode(pad + offset, namelen * 8);
+
+	for (i = 0; i < namelen; ++i)
+	{
+		pad[offset + i] = pname[i];
+	}
+
+	offset += namelen;
 	offset += left_encode(pad + offset, customlen * 8);
 
 	for (i = 0; i < customlen; ++i)
@@ -3368,12 +3379,12 @@ void kmac128_initialize(keccak_state* state, const uint8_t* key, size_t keylen, 
 	keccak_permute(state->state);
 }
 
-void kmac256(uint8_t* output, size_t outputlen, const uint8_t* message, size_t msglen, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen)
+void kmac256_compute(uint8_t* output, size_t outputlen, const uint8_t* message, size_t msglen, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen, const uint8_t* name, size_t namelen)
 {
 	keccak_state state;
 
 	clear64(state.state, KMAC_STATE_SIZE);
-	kmac256_initialize(&state, key, keylen, custom, customlen);
+	kmac256_initialize(&state, key, keylen, custom, customlen, name, namelen);
 
 	if (msglen >= KMAC_256_RATE)
 	{
@@ -3455,10 +3466,11 @@ void kmac256_finalize(keccak_state* state, uint8_t* output, size_t outputlen, co
 	}
 }
 
-void kmac256_initialize(keccak_state* state, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen)
+void kmac256_initialize(keccak_state* state, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen, const uint8_t* name, size_t namelen)
 {
 	uint8_t pad[KMAC_STATE_SIZE * sizeof(uint64_t)] = { 0 };
-	const uint8_t name[] = { 0x4B, 0x4D, 0x41, 0x43 };
+	const uint8_t defn[] = { 0x4B, 0x4D, 0x41, 0x43 };
+	const uint8_t* pname;
 	size_t offset;
 	size_t i;
 	size_t j;
@@ -3468,15 +3480,25 @@ void kmac256_initialize(keccak_state* state, const uint8_t* key, size_t keylen, 
 
 	/* stage 1: name + custom */
 
-	offset = left_encode(pad, KMAC_256_RATE);
-	offset += left_encode(pad + offset, sizeof(name) * 8);
-
-	for (i = 0; i < sizeof(name); ++i)
+	if (namelen == 0)
 	{
-		pad[offset + i] = name[i];
+		pname = defn;
+		namelen = sizeof(defn);
+	}
+	else
+	{
+		pname = name;
 	}
 
-	offset += sizeof(name);
+	offset = left_encode(pad, KMAC_256_RATE);
+	offset += left_encode(pad + offset, namelen * 8);
+
+	for (i = 0; i < namelen; ++i)
+	{
+		pad[offset + i] = pname[i];
+	}
+
+	offset += namelen;
 	offset += left_encode(pad + offset, customlen * 8);
 
 	for (i = 0; i < customlen; ++i)
@@ -3538,12 +3560,12 @@ void kmac256_initialize(keccak_state* state, const uint8_t* key, size_t keylen, 
 	keccak_permute(state->state);
 }
 
-void kmac512(uint8_t* output, size_t outputlen, const uint8_t* message, size_t msglen, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen)
+void kmac512_compute(uint8_t* output, size_t outputlen, const uint8_t* message, size_t msglen, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen, const uint8_t* name, size_t namelen)
 {
 	keccak_state state;
 
 	clear64(state.state, KMAC_STATE_SIZE);
-	kmac512_initialize(&state, key, keylen, custom, customlen);
+	kmac512_initialize(&state, key, keylen, custom, customlen, name, namelen);
 
 	if (msglen >= KMAC_512_RATE)
 	{
@@ -3627,10 +3649,11 @@ void kmac512_finalize(keccak_state* state, uint8_t* output, size_t outputlen, co
 	}
 }
 
-void kmac512_initialize(keccak_state* state, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen)
+void kmac512_initialize(keccak_state* state, const uint8_t* key, size_t keylen, const uint8_t* custom, size_t customlen, const uint8_t* name, size_t namelen)
 {
 	uint8_t pad[KMAC_STATE_SIZE * sizeof(uint64_t)] = { 0 };
-	const uint8_t name[] = { 0x4B, 0x4D, 0x41, 0x43 };
+	const uint8_t defn[] = { 0x4B, 0x4D, 0x41, 0x43 };
+	const uint8_t* pname;
 	size_t offset;
 	size_t i;
 	size_t j;
@@ -3639,15 +3662,25 @@ void kmac512_initialize(keccak_state* state, const uint8_t* key, size_t keylen, 
 
 	/* stage 1: name + custom */
 
-	offset = left_encode(pad, KMAC_512_RATE);
-	offset += left_encode(pad + offset, sizeof(name) * 8);
-
-	for (i = 0; i < sizeof(name); ++i)
+	if (namelen == 0)
 	{
-		pad[offset + i] = name[i];
+		pname = defn;
+		namelen = sizeof(defn);
+	}
+	else
+	{
+		pname = name;
 	}
 
-	offset += sizeof(name);
+	offset = left_encode(pad, KMAC_512_RATE);
+	offset += left_encode(pad + offset, namelen * 8);
+
+	for (i = 0; i < namelen; ++i)
+	{
+		pad[offset + i] = pname[i];
+	}
+
+	offset += namelen;
 	offset += left_encode(pad + offset, customlen * 8);
 
 	for (i = 0; i < customlen; ++i)
