@@ -1,23 +1,25 @@
 #include "csp.h"
 
 #if defined(QSC_SYSTEM_OS_WINDOWS)
-#	include <tchar.h>
 #	include <windows.h>
-#	include <Wincrypt.h>
-#	pragma comment(lib, "crypt32.lib")
-
+#	pragma comment(lib, "advapi32.lib")
 #else
-#	include <sys/types.h> /* TODO: are all of these really needed? */
+#	include <sys/types.h>
 #	include <sys/stat.h>
 #	include <errno.h>
 #	include <fcntl.h>
+#	include <limits.h>
 #	include <stdlib.h>
 #	include <stdio.h>
+#	include <sys/types.h>
 #	include <unistd.h>
-#	ifndef O_NOCTTY
+#	if !defined(O_NOCTTY)
 #		define O_NOCTTY 0
 #	endif
-#	define CEX_SYSTEM_RNG_DEVICE "/dev/urandom"
+#endif
+
+#if defined(__OpenBSD__) || defined(__CloudABI__) || defined(__wasi__)
+#	define HAVE_SAFE_ARC4RANDOM
 #endif
 
 bool qsc_csp_generate(uint8_t* output, size_t length)
@@ -49,6 +51,10 @@ bool qsc_csp_generate(uint8_t* output, size_t length)
 	{
 		CryptReleaseContext(hprov, 0);
 	}
+
+#elif defined(HAVE_SAFE_ARC4RANDOM)
+
+	arc4random_buf(output, length);
 
 #else
 

@@ -213,8 +213,8 @@ QSC_EXPORT_API typedef enum
 /**
 * \brief Dispose of the Keccak state.
 *
-* \warning The dispose function must be called when disposing of the cipher.
-* This function destroys the internal state of the cipher.
+* \warning The dispose function must be called when disposing of the function state.
+* This function safely destroys the internal state.
 *
 * \param ctx: [struct] The cipher state structure
 */
@@ -412,7 +412,7 @@ QSC_EXPORT_API void qsc_cshake256_compute(uint8_t* output, size_t outlen, const 
 QSC_EXPORT_API void qsc_cshake512_compute(uint8_t* output, size_t outlen, const uint8_t* key, size_t keylen, const uint8_t* name, size_t namelen, const uint8_t* custom, size_t custlen);
 
 /**
-* \brief The cSHAKE-128 initialize function.
+* \brief The cSHAKE initialize function.
 * Long form api: must be used in conjunction with the squeezeblocks function.
 * Initialize the name and customization strings into the state.
 *
@@ -556,6 +556,12 @@ QSC_EXPORT_API void qsc_kmac_initialize(qsc_keccak_state* ctx, keccak_rate rate,
 #endif
 
 /*!
+* \def QSC_KPA_128_KEY_SIZE
+* \brief The KPA-128 key size in bytes
+*/
+#define QSC_KPA_128_KEY_SIZE 16
+
+/*!
 * \def QSC_KPA_256_KEY_SIZE
 * \brief The KPA-256 key size in bytes
 */
@@ -591,8 +597,8 @@ QSC_EXPORT_API typedef struct
 	__m256i statew[2][QSC_KECCAK_STATE_SIZE];
 #endif
 
-	uint64_t state[8][QSC_KECCAK_STATE_SIZE];
-	uint8_t buffer[8 * QSC_KECCAK_STATE_BYTE_SIZE];
+	uint64_t state[QSC_KPA_PARALLELISM][QSC_KECCAK_STATE_SIZE];
+	uint8_t buffer[QSC_KPA_PARALLELISM * QSC_KECCAK_STATE_BYTE_SIZE];
 	size_t position;
 	size_t processed;
 	keccak_rate rate;
@@ -635,5 +641,425 @@ QSC_EXPORT_API void qsc_kpa_initialize(qsc_kpa_state* ctx, const uint8_t* key, s
 * \param msglen: The number of message bytes to process
 */
 QSC_EXPORT_API void qsc_kpa_update(qsc_kpa_state* ctx, const uint8_t* message, size_t msglen);
+
+/**
+* \brief Dispose of the KPA state.
+*
+* \warning The dispose function must be called when disposing of the function state.
+* This function safely destroys the internal state.
+*
+* \param ctx: [struct] The cipher state structure
+*/
+QSC_EXPORT_API void qsc_kpa_dispose(qsc_kpa_state* ctx);
+
+/* parallel shake x4 */
+
+/**
+* \brief Process 4 SHAKE-128 instances simultaneously using SIMD instructions.
+*
+* \warning The input and output arrays muct be of the same length.
+* This function requires the AVX2 instruction set.
+*
+* \param out0: The 1st output array
+* \param out1: The 2nd output array
+* \param out2: The 3rd output array
+* \param out3: The 4th output array
+* \param outlen: The length of the output arrays
+* \param inp0: The 1st input key array
+* \param inp1: The 2nd input key array
+* \param inp2: The 3rd input key array
+* \param inp3: The 4th input key array
+* \param inplen: The length of the input key arrays
+*/
+QSC_EXPORT_API void shake128x4(uint8_t* out0, uint8_t* out1, uint8_t* out2, uint8_t* out3, size_t outlen,
+	const uint8_t* inp0, const uint8_t* inp1, const uint8_t* inp2, const uint8_t* inp3, size_t inlen);
+
+/**
+* \brief Process 4 SHAKE-256 instances simultaneously using SIMD instructions.
+*
+* \warning The input and output arrays muct be of the same length.
+* This function requires the AVX2 instruction set.
+* 
+* \param out0: The 1st output array
+* \param out1: The 2nd output array
+* \param out2: The 3rd output array
+* \param out3: The 4th output array
+* \param outlen: The length of the output arrays
+* \param inp0: The 1st input key array
+* \param inp1: The 2nd input key array
+* \param inp2: The 3rd input key array
+* \param inp3: The 4th input key array
+* \param inplen: The length of the input key arrays
+*/
+QSC_EXPORT_API void shake256x4(uint8_t* out0, uint8_t* out1, uint8_t* out2, uint8_t* out3, size_t outlen,
+	const uint8_t* inp0, const uint8_t* inp1, const uint8_t* inp2, const uint8_t* inp3, size_t inlen);
+
+/**
+* \brief Process 4 SHAKE-512 instances simultaneously using SIMD instructions.
+*
+* \warning The input and output arrays muct be of the same length.
+* This function requires the AVX2 instruction set.
+* 
+* \param out0: The 1st output array
+* \param out1: The 2nd output array
+* \param out2: The 3rd output array
+* \param out3: The 4th output array
+* \param outlen: The length of the output arrays
+* \param inp0: The 1st input key array
+* \param inp1: The 2nd input key array
+* \param inp2: The 3rd input key array
+* \param inp3: The 4th input key array
+* \param inplen: The length of the input key arrays
+*/
+QSC_EXPORT_API void shake512x4(uint8_t* out0, uint8_t* out1, uint8_t* out2, uint8_t* out3, size_t outlen,
+	const uint8_t* inp0, const uint8_t* inp1, const uint8_t* inp2, const uint8_t* inp3, size_t inlen);
+
+/* parallel shake x8 */
+
+/**
+* \brief Process 8 SHAKE-128 instances simultaneously using SIMD instructions.
+*
+* \warning The input and output arrays muct be of the same length.
+* This function requires the AVX512 instruction set.
+*
+* \param out0: The 1st output array
+* \param out1: The 2nd output array
+* \param out2: The 3rd output array
+* \param out3: The 4th output array
+* \param out4: The 5th output array
+* \param out5: The 6th output array
+* \param out6: The 7th output array
+* \param out7: The 8th output array
+* \param outlen: The length of the output arrays
+* \param inp0: The 1st input key array
+* \param inp1: The 2nd input key array
+* \param inp2: The 3rd input key array
+* \param inp3: The 4th input key array
+* \param out4: The 5th input key array
+* \param out5: The 6th input key array
+* \param out6: The 7th input key array
+* \param out7: The 8th input key array
+* \param inplen: The length of the input key arrays
+*/
+QSC_EXPORT_API void shake128x8(uint8_t* out0, uint8_t* out1, uint8_t* out2, uint8_t* out3,
+	uint8_t* out4, uint8_t* out5, uint8_t* out6, uint8_t* out7, size_t outlen,
+	const uint8_t* inp0, const uint8_t* inp1, const uint8_t* inp2, const uint8_t* inp3,
+	const uint8_t* inp4, const uint8_t* inp5, const uint8_t* inp6, const uint8_t* inp7, size_t inlen);
+
+/**
+* \brief Process 8 SHAKE-256 instances simultaneously using SIMD instructions.
+*
+* \warning The input and output arrays muct be of the same length.
+* This function requires the AVX512 instruction set.
+*
+* \param out0: The 1st output array
+* \param out1: The 2nd output array
+* \param out2: The 3rd output array
+* \param out3: The 4th output array
+* \param out4: The 5th output array
+* \param out5: The 6th output array
+* \param out6: The 7th output array
+* \param out7: The 8th output array
+* \param outlen: The length of the output arrays
+* \param inp0: The 1st input key array
+* \param inp1: The 2nd input key array
+* \param inp2: The 3rd input key array
+* \param inp3: The 4th input key array
+* \param out4: The 5th input key array
+* \param out5: The 6th input key array
+* \param out6: The 7th input key array
+* \param out7: The 8th input key array
+* \param inplen: The length of the input key arrays
+*/
+QSC_EXPORT_API void shake256x8(uint8_t* out0, uint8_t* out1, uint8_t* out2, uint8_t* out3,
+	uint8_t* out4, uint8_t* out5, uint8_t* out6, uint8_t* out7, size_t outlen,
+	const uint8_t* inp0, const uint8_t* inp1, const uint8_t* inp2, const uint8_t* inp3,
+	const uint8_t* inp4, const uint8_t* inp5, const uint8_t* inp6, const uint8_t* inp7, size_t inlen);
+
+/**
+* \brief Process 8 SHAKE-512 instances simultaneously using SIMD instructions.
+*
+* \warning The input and output arrays muct be of the same length.
+* This function requires the AVX512 instruction set.
+*
+* \param out0: The 1st output array
+* \param out1: The 2nd output array
+* \param out2: The 3rd output array
+* \param out3: The 4th output array
+* \param out4: The 5th output array
+* \param out5: The 6th output array
+* \param out6: The 7th output array
+* \param out7: The 8th output array
+* \param outlen: The length of the output arrays
+* \param inp0: The 1st input key array
+* \param inp1: The 2nd input key array
+* \param inp2: The 3rd input key array
+* \param inp3: The 4th input key array
+* \param out4: The 5th input key array
+* \param out5: The 6th input key array
+* \param out6: The 7th input key array
+* \param out7: The 8th input key array
+* \param inplen: The length of the input key arrays
+*/
+QSC_EXPORT_API void shake512x8(uint8_t* out0, uint8_t* out1, uint8_t* out2, uint8_t* out3,
+	uint8_t* out4, uint8_t* out5, uint8_t* out6, uint8_t* out7, size_t outlen,
+	const uint8_t* inp0, const uint8_t* inp1, const uint8_t* inp2, const uint8_t* inp3,
+	const uint8_t* inp4, const uint8_t* inp5, const uint8_t* inp6, const uint8_t* inp7, size_t inlen);
+
+/* parallel kmac x4 */
+
+/**
+* \brief Process 4 KMAC-128 instances simultaneously using SIMD instructions.
+*
+* \warning The input and output arrays muct be of the same length.
+* This function requires the AVX2 instruction set.
+*
+* \param out0: The 1st output array
+* \param out1: The 2nd output array
+* \param out2: The 3rd output array
+* \param out3: The 4th output array
+* \param outlen: The length of the output arrays
+* \param key0: The 1st key array
+* \param key1: The 2nd key array
+* \param key2: The 3rd key array
+* \param key3: The 4th key array
+* \param keylen: The length of the input key arrays
+* \param cst0: The 1st custom array
+* \param cst1: The 2nd custom array
+* \param cst2: The 3rd custom array
+* \param cst3: The 4th custom array
+* \param cstlen: The length of the custom arrays
+* \param msg0: The 1st message array
+* \param msg1: The 2nd message array
+* \param msg2: The 3rd message array
+* \param msg3: The 4th message array
+* \param msglen: The length of the message arrays
+*/
+QSC_EXPORT_API void kmac128x4(uint8_t* out0, uint8_t* out1, uint8_t* out2, uint8_t* out3, size_t outlen,
+	const uint8_t* key0, const uint8_t* key1, const uint8_t* key2, const uint8_t* key3, size_t keylen,
+	const uint8_t* cst0, const uint8_t* cst1, const uint8_t* cst2, const uint8_t* cst3, size_t cstlen,
+	const uint8_t* msg0, const uint8_t* msg1, const uint8_t* msg2, const uint8_t* msg3, size_t msglen);
+
+/**
+* \brief Process 4 KMAC-256 instances simultaneously using SIMD instructions.
+*
+* \warning The input and output arrays muct be of the same length.
+* This function requires the AVX2 instruction set.
+*
+* \param out0: The 1st output array
+* \param out1: The 2nd output array
+* \param out2: The 3rd output array
+* \param out3: The 4th output array
+* \param outlen: The length of the output arrays
+* \param key0: The 1st key array
+* \param key1: The 2nd key array
+* \param key2: The 3rd key array
+* \param key3: The 4th key array
+* \param keylen: The length of the input key arrays
+* \param cst0: The 1st custom array
+* \param cst1: The 2nd custom array
+* \param cst2: The 3rd custom array
+* \param cst3: The 4th custom array
+* \param cstlen: The length of the custom arrays
+* \param msg0: The 1st message array
+* \param msg1: The 2nd message array
+* \param msg2: The 3rd message array
+* \param msg3: The 4th message array
+* \param msglen: The length of the message arrays
+*/
+QSC_EXPORT_API void kmac256x4(uint8_t* out0, uint8_t* out1, uint8_t* out2, uint8_t* out3, size_t outlen,
+	const uint8_t* key0, const uint8_t* key1, const uint8_t* key2, const uint8_t* key3, size_t keylen,
+	const uint8_t* cst0, const uint8_t* cst1, const uint8_t* cst2, const uint8_t* cst3, size_t cstlen,
+	const uint8_t* msg0, const uint8_t* msg1, const uint8_t* msg2, const uint8_t* msg3, size_t msglen);
+
+/**
+* \brief Process 4 KMAC-512 instances simultaneously using SIMD instructions.
+*
+* \warning The input and output arrays muct be of the same length.
+* This function requires the AVX2 instruction set.
+*
+* \param out0: The 1st output array
+* \param out1: The 2nd output array
+* \param out2: The 3rd output array
+* \param out3: The 4th output array
+* \param outlen: The length of the output arrays
+* \param key0: The 1st key array
+* \param key1: The 2nd key array
+* \param key2: The 3rd key array
+* \param key3: The 4th key array
+* \param keylen: The length of the input key arrays
+* \param cst0: The 1st custom array
+* \param cst1: The 2nd custom array
+* \param cst2: The 3rd custom array
+* \param cst3: The 4th custom array
+* \param cstlen: The length of the custom arrays
+* \param msg0: The 1st message array
+* \param msg1: The 2nd message array
+* \param msg2: The 3rd message array
+* \param msg3: The 4th message array
+* \param msglen: The length of the message arrays
+*/
+QSC_EXPORT_API void kmac512x4(uint8_t* out0, uint8_t* out1, uint8_t* out2, uint8_t* out3, size_t outlen,
+	const uint8_t* key0, const uint8_t* key1, const uint8_t* key2, const uint8_t* key3, size_t keylen,
+	const uint8_t* cst0, const uint8_t* cst1, const uint8_t* cst2, const uint8_t* cst3, size_t cstlen,
+	const uint8_t* msg0, const uint8_t* msg1, const uint8_t* msg2, const uint8_t* msg3, size_t msglen);
+
+/* parallel kmac x8 */
+
+/**
+* \brief Process 8 KMAC-128 instances simultaneously using SIMD instructions.
+*
+* \warning The input and output arrays muct be of the same length.
+* This function requires the AVX512 instruction set.
+*
+* \param out0: The 1st output array
+* \param out1: The 2nd output array
+* \param out2: The 3rd output array
+* \param out3: The 4th output array
+* \param out4: The 5th output array
+* \param out5: The 6th output array
+* \param out6: The 7th output array
+* \param out7: The 8th output array
+* \param outlen: The length of the output arrays
+* \param key0: The 1st key array
+* \param key1: The 2nd key array
+* \param key2: The 3rd key array
+* \param key3: The 4th key array
+* \param key4: The 5th key array
+* \param key5: The 6th key array
+* \param key6: The 7th key array
+* \param key7: The 8th key array
+* \param keylen: The length of the key arrays
+* \param cst0: The 1st custom array
+* \param cst1: The 2nd custom array
+* \param cst2: The 3rd custom array
+* \param cst3: The 4th custom array
+* \param cst4: The 5th custom array
+* \param cst5: The 6th custom array
+* \param cst6: The 7th custom array
+* \param cst7: The 8th custom array
+* \param cstlen: The length of the custom arrays
+* \param msg0: The 1st message array
+* \param msg1: The 2nd message array
+* \param msg2: The 3rd message array
+* \param msg3: The 4th message array
+* \param msg4: The 5th message array
+* \param msg5: The 6th message array
+* \param msg6: The 7th message array
+* \param msg7: The 8th message array
+* \param msglen: The length of the message arrays
+*/
+QSC_EXPORT_API void kmac128x8(uint8_t* out0, uint8_t* out1, uint8_t* out2, uint8_t* out3,
+	uint8_t* out4, uint8_t* out5, uint8_t* out6, uint8_t* out7, size_t outlen,
+	const uint8_t* key0, const uint8_t* key1, const uint8_t* key2, const uint8_t* key3,
+	const uint8_t* key4, const uint8_t* key5, const uint8_t* key6, const uint8_t* key7, size_t keylen,
+	const uint8_t* cst0, const uint8_t* cst1, const uint8_t* cst2, const uint8_t* cst3,
+	const uint8_t* cst4, const uint8_t* cst5, const uint8_t* cst6, const uint8_t* cst7, size_t cstlen,
+	const uint8_t* msg0, const uint8_t* msg1, const uint8_t* msg2, const uint8_t* msg3,
+	const uint8_t* msg4, const uint8_t* msg5, const uint8_t* msg6, const uint8_t* msg7, size_t msglen);
+
+/**
+* \brief Process 8 KMAC-256 instances simultaneously using SIMD instructions.
+*
+* \warning The input and output arrays muct be of the same length.
+* This function requires the AVX512 instruction set.
+*
+* \param out0: The 1st output array
+* \param out1: The 2nd output array
+* \param out2: The 3rd output array
+* \param out3: The 4th output array
+* \param out4: The 5th output array
+* \param out5: The 6th output array
+* \param out6: The 7th output array
+* \param out7: The 8th output array
+* \param outlen: The length of the output arrays
+* \param key0: The 1st key array
+* \param key1: The 2nd key array
+* \param key2: The 3rd key array
+* \param key3: The 4th key array
+* \param key4: The 5th key array
+* \param key5: The 6th key array
+* \param key6: The 7th key array
+* \param key7: The 8th key array
+* \param keylen: The length of the key arrays
+* \param cst0: The 1st custom array
+* \param cst1: The 2nd custom array
+* \param cst2: The 3rd custom array
+* \param cst3: The 4th custom array
+* \param cst4: The 5th custom array
+* \param cst5: The 6th custom array
+* \param cst6: The 7th custom array
+* \param cst7: The 8th custom array
+* \param cstlen: The length of the custom arrays
+* \param msg0: The 1st message array
+* \param msg1: The 2nd message array
+* \param msg2: The 3rd message array
+* \param msg3: The 4th message array
+* \param msg4: The 5th message array
+* \param msg5: The 6th message array
+* \param msg6: The 7th message array
+* \param msg7: The 8th message array
+* \param msglen: The length of the message arrays
+*/
+QSC_EXPORT_API void kmac256x8(uint8_t* out0, uint8_t* out1, uint8_t* out2, uint8_t* out3,
+	uint8_t* out4, uint8_t* out5, uint8_t* out6, uint8_t* out7, size_t outlen,
+	const uint8_t* key0, const uint8_t* key1, const uint8_t* key2, const uint8_t* key3,
+	const uint8_t* key4, const uint8_t* key5, const uint8_t* key6, const uint8_t* key7, size_t keylen,
+	const uint8_t* cst0, const uint8_t* cst1, const uint8_t* cst2, const uint8_t* cst3,
+	const uint8_t* cst4, const uint8_t* cst5, const uint8_t* cst6, const uint8_t* cst7, size_t cstlen,
+	const uint8_t* msg0, const uint8_t* msg1, const uint8_t* msg2, const uint8_t* msg3,
+	const uint8_t* msg4, const uint8_t* msg5, const uint8_t* msg6, const uint8_t* msg7, size_t msglen);
+
+/**
+* \brief Process 8 KMAC-512 instances simultaneously using SIMD instructions.
+*
+* \warning The input and output arrays muct be of the same length.
+* This function requires the AVX512 instruction set.
+*
+* \param out0: The 1st output array
+* \param out1: The 2nd output array
+* \param out2: The 3rd output array
+* \param out3: The 4th output array
+* \param out4: The 5th output array
+* \param out5: The 6th output array
+* \param out6: The 7th output array
+* \param out7: The 8th output array
+* \param outlen: The length of the output arrays
+* \param key0: The 1st key array
+* \param key1: The 2nd key array
+* \param key2: The 3rd key array
+* \param key3: The 4th key array
+* \param key4: The 5th key array
+* \param key5: The 6th key array
+* \param key6: The 7th key array
+* \param key7: The 8th key array
+* \param keylen: The length of the key arrays
+* \param cst0: The 1st custom array
+* \param cst1: The 2nd custom array
+* \param cst2: The 3rd custom array
+* \param cst3: The 4th custom array
+* \param cst4: The 5th custom array
+* \param cst5: The 6th custom array
+* \param cst6: The 7th custom array
+* \param cst7: The 8th custom array
+* \param cstlen: The length of the custom arrays
+* \param msg0: The 1st message array
+* \param msg1: The 2nd message array
+* \param msg2: The 3rd message array
+* \param msg3: The 4th message array
+* \param msg4: The 5th message array
+* \param msg5: The 6th message array
+* \param msg6: The 7th message array
+* \param msg7: The 8th message array
+* \param msglen: The length of the message arrays
+*/
+QSC_EXPORT_API void kmac512x8(uint8_t* out0, uint8_t* out1, uint8_t* out2, uint8_t* out3,
+	uint8_t* out4, uint8_t* out5, uint8_t* out6, uint8_t* out7, size_t outlen,
+	const uint8_t* key0, const uint8_t* key1, const uint8_t* key2, const uint8_t* key3,
+	const uint8_t* key4, const uint8_t* key5, const uint8_t* key6, const uint8_t* key7, size_t keylen,
+	const uint8_t* cst0, const uint8_t* cst1, const uint8_t* cst2, const uint8_t* cst3,
+	const uint8_t* cst4, const uint8_t* cst5, const uint8_t* cst6, const uint8_t* cst7, size_t cstlen,
+	const uint8_t* msg0, const uint8_t* msg1, const uint8_t* msg2, const uint8_t* msg3,
+	const uint8_t* msg4, const uint8_t* msg5, const uint8_t* msg6, const uint8_t* msg7, size_t msglen);
 
 #endif

@@ -67,14 +67,35 @@ QSC_EXPORT_API void qsc_memutils_prefetch_l3(uint8_t* address, size_t length);
 *
 * \return Returns the aligned array of bytes, or NULL on failure
 */
-QSC_EXPORT_API uint8_t* qsc_memutils_aligned_alloc(int align, size_t length);
+QSC_EXPORT_API void* qsc_memutils_aligned_alloc(int align, size_t length);
 
 /**
 * \brief Free an aligned memory block created with aligned_alloc
 *
 * \param block: A pointer to the memory block to release
 */
-QSC_EXPORT_API void qsc_memutils_aligned_free(uint8_t* block);
+QSC_EXPORT_API void qsc_memutils_aligned_free(void* block);
+
+/**
+* \brief Erase 16 bytes of memory SIMD instructions
+*
+* \param output: A pointer to the memory block to erase
+*/
+QSC_EXPORT_API void qsc_memutils_clear128(uint8_t* output);
+
+/**
+* \brief Erase 32 bytes of memory using SIMD instructions
+*
+* \param output: A pointer to the memory block to erase
+*/
+QSC_EXPORT_API void qsc_memutils_clear256(uint8_t* output);
+
+/**
+* \brief Erase 64 bytes of memory using SIMD instructions
+*
+* \param output: A pointer to the memory block to erase
+*/
+QSC_EXPORT_API void qsc_memutils_clear512(uint8_t* output);
 
 /**
 * \brief Erase a block of memory
@@ -83,6 +104,30 @@ QSC_EXPORT_API void qsc_memutils_aligned_free(uint8_t* block);
 * \param length: The number of bytes to erase
 */
 QSC_EXPORT_API void qsc_memutils_clear(uint8_t* output, size_t length);
+
+/**
+* \brief Copy 16 bytes of memory using SIMD instructions
+*
+* \param input: A pointer to the input memory block
+* \param output: A pointer to the output memory block
+*/
+QSC_EXPORT_API void qsc_memutils_copy128(const uint8_t* input, uint8_t* output);
+
+/**
+* \brief Copy 32 bytes of memory using SIMD instructions
+*
+* \param input: A pointer to the input memory block
+* \param output: A pointer to the output memory block
+*/
+QSC_EXPORT_API void qsc_memutils_copy256(const uint8_t* input, uint8_t* output);
+
+/**
+* \brief Copy 64 bytes of memory using SIMD instructions
+*
+* \param input: A pointer to the input memory block
+* \param output: A pointer to the output memory block
+*/
+QSC_EXPORT_API void qsc_memutils_copy256(const uint8_t* input, uint8_t* output);
 
 /**
 * \brief Copy a block of memory

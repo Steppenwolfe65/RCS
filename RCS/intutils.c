@@ -187,6 +187,53 @@ bool qsc_intutils_is_gte(size_t x, size_t y)
 	return (bool)(x >= y);
 }
 
+void qsc_intutils_bin_to_hex(const uint8_t* input, char* hexstr, size_t length)
+{
+	const uint8_t ENCODING_TABLE[16] =
+	{
+		0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66
+	};
+
+	size_t ctr;
+	size_t i;
+	int vct;
+
+	ctr = 0;
+
+	for (i = 0; i < length; ++i)
+	{
+		vct = input[i];
+		hexstr[ctr] = ENCODING_TABLE[vct >> 4];
+		++ctr;
+		hexstr[ctr] = ENCODING_TABLE[vct & 0x0F];
+		++ctr;
+	}
+}
+
+void qsc_intutils_hex_to_bin(const char* hexstr, uint8_t* output, size_t length)
+{
+	size_t  pos;
+	uint8_t  idx0;
+	uint8_t  idx1;
+
+	const uint8_t hashmap[] =
+	{
+		0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+		0x08, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	};
+
+	memset(output, 0, length);
+
+	for (pos = 0; pos < (length * 2); pos += 2)
+	{
+		idx0 = ((uint8_t)hexstr[pos + 0] & 0x1FU) ^ 0x10U;
+		idx1 = ((uint8_t)hexstr[pos + 1] & 0x1FU) ^ 0x10U;
+		output[pos / 2] = (uint8_t)(hashmap[idx0] << 4) | hashmap[idx1];
+	}
+}
+
 void qsc_intutils_le8increment(uint8_t* output, size_t outlen)
 {
 	size_t i;

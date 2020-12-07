@@ -3,10 +3,6 @@
 #include "intutils.h"
 #include "sha3.h"
 
-/* jgu -suppressing misra stdio header warning in example only */
-/*lint -e829 */
-#include <stdio.h>
-
 bool qsctest_sha3_256_kat()
 {
 	uint8_t exp0[QSC_SHA3_256_HASH_SIZE] = { 0 };
@@ -966,16 +962,15 @@ bool qsctest_kpa_256_kat()
 	uint8_t exp256a[32] = { 0 };
 	uint8_t exp256b[32] = { 0 };
 	uint8_t msg256[32] = { 0 };
-	/* natural block-size of KPA-256 is 1088 bytes */
 	uint8_t msg8704[1088] = { 0 };
 	uint8_t key256[32] = { 0 };
-	uint8_t output[64] = { 0 };
+	uint8_t output[32] = { 0 };
 	qsc_kpa_state ctx;
 	bool status;
 
 	qsctest_hex_to_bin("4D7920546167676564204170706C69636174696F6E", cust168, sizeof(cust168));
-	qsctest_hex_to_bin("BA384AB2A936DD0241262D0015D6A24E9B2C6E9AAB7DB518069CA9F8A2210A1C", exp256a, sizeof(exp256a));
-	qsctest_hex_to_bin("6CF303C0CCB7ED32F2DBC36B74263FDD07E0F710E6191272DE9793141D8C301B", exp256b, sizeof(exp256b));
+	qsctest_hex_to_bin("EBEC64EBE52DA21D9465341CBDC4941F5141855F8B62312EBDFC015083315193", exp256a, sizeof(exp256a));
+	qsctest_hex_to_bin("36DB74619B441167575FCD69E4B4DFDEECFF97F99F49BB68B7EB7A4FDC5A9E20", exp256b, sizeof(exp256b));
 	qsctest_hex_to_bin("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F", key256, sizeof(key256));
 	qsctest_hex_to_bin("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F", msg256, sizeof(msg256));
 	qsctest_hex_to_bin("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F"
@@ -1046,7 +1041,6 @@ bool qsctest_kpa_512_kat()
 	uint8_t exp512a[64] = { 0 };
 	uint8_t exp512b[64] = { 0 };
 	uint8_t msg512[64] = { 0 };
-	/* natural block-size of KPA-512 is 576 bytes */
 	uint8_t msg4608[576] = { 0 };
 	uint8_t key512[64] = { 0 };
 	uint8_t output[64] = { 0 };
@@ -1054,10 +1048,10 @@ bool qsctest_kpa_512_kat()
 	bool status;
 
 	qsctest_hex_to_bin("4D7920546167676564204170706C69636174696F6E", cust168, sizeof(cust168));
-	qsctest_hex_to_bin("6280A02CA3CF90282152F783F2934947364A22313E472655EF30218D978ED114"
-		"86D16065D2CE6B2E7C723D6DB28A70C800E100E41609372E6078F7693BF8AA65", exp512a, sizeof(exp512a));
-	qsctest_hex_to_bin("554083068F94F13EDE392F50ADDA322A0F7C1853C7019878DDC086ECA999A8B2"
-		"DDB8786CA56EA8A05C36DD8B5E80A642FA4CEA8BC96DA26D11437E665205FE2E", exp512b, sizeof(exp512b));
+	qsctest_hex_to_bin("5A3A48CE2221347213A93A847EAEF6455351018E1239C130069DB1A71DCF28DC"
+		"8D9FB65193F1AB620752A4FEA0DDF0ED5824CAB50DD37BBC4A8909A91ADBC2C2", exp512a, sizeof(exp512a));
+	qsctest_hex_to_bin("D31EDF6ABD9B4497C98F065C398622E51DCC24B96DA9345D613757274472C612"
+		"165218DD0F15D86E93894289AD95081FF5CE80FFFAAB5625D3CBFAC4CEB88898", exp512b, sizeof(exp512b));
 	qsctest_hex_to_bin("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F"
 		"202122232425262728292A2B2C2D2E2F303132333435363738393A3B3C3D3E3F", key512, sizeof(key512));
 	qsctest_hex_to_bin("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F"
@@ -1107,8 +1101,1133 @@ bool qsctest_kpa_512_kat()
 	return status;
 }
 
+#if defined(QSC_SYSTEM_HAS_AVX2)
+bool qsctest_kmac128x4_equality()
+{
+	uint8_t cst[4][16] = { 0 };
+	uint8_t key[4][18] = { 0 };
+	uint8_t msg[4][256] = { 0 };
+	uint8_t otp[4][16] = { 0 };
+	uint8_t exp[4][16] = { 0 };
+	size_t i;
+	bool status;
+
+	status = true;
+
+	for (i = 0; i < 16; ++i)
+	{
+		cst[0][i] = (uint8_t)i;
+		cst[1][i] = (uint8_t)i;
+		cst[2][i] = (uint8_t)i;
+		cst[3][i] = (uint8_t)i;
+		key[0][i] = (uint8_t)i;
+		key[1][i] = (uint8_t)i;
+		key[2][i] = (uint8_t)i;
+		key[3][i] = (uint8_t)i;
+	}
+
+	key[0][16] = (uint8_t)1;
+	key[1][16] = (uint8_t)2;
+	key[2][16] = (uint8_t)3;
+	key[3][16] = (uint8_t)4;
+
+	for (i = 0; i < 256; ++i)
+	{
+		msg[0][i] = (uint8_t)i;
+		msg[1][i] = (uint8_t)i;
+		msg[2][i] = (uint8_t)i;
+		msg[3][i] = (uint8_t)i;
+	}
+
+	qsc_kmac128_compute(exp[0], 16, msg[0], 256, key[0], 18, cst[0], 16);
+
+	kmac128x4(otp[0], otp[1], otp[2], otp[3], 16, key[0], key[1], key[2], key[3], 18,
+		cst[0], cst[1], cst[2], cst[3], 16, msg[0], msg[1], msg[2], msg[3], 256);
+
+	if (qsc_intutils_are_equal8(exp[0], otp[0], sizeof(exp[0])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac128x4_equality: output does not match the known answer -KP1 \n");
+		status = false;
+	}
+
+	qsc_kmac128_compute(exp[1], 16, msg[1], 256, key[1], 18, cst[1], 16);
+
+	if (qsc_intutils_are_equal8(exp[1], otp[1], sizeof(exp[1])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac128x4_equality: output does not match the known answer -KP2 \n");
+		status = false;
+	}
+
+	qsc_kmac128_compute(exp[2], 16, msg[2], 256, key[2], 18, cst[2], 16);
+
+	if (qsc_intutils_are_equal8(exp[2], otp[2], sizeof(exp[2])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac128x4_equality: output does not match the known answer -KP3 \n");
+		status = false;
+	}
+
+	qsc_kmac128_compute(exp[3], 16, msg[3], 256, key[3], 18, cst[3], 16);
+
+	if (qsc_intutils_are_equal8(exp[3], otp[3], sizeof(exp[3])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac128x4_equality: output does not match the known answer -KP4 \n");
+		status = false;
+	}
+
+	return status;
+}
+
+bool qsctest_kmac256x4_equality()
+{
+	uint8_t cst[4][32] = { 0 };
+	uint8_t key[4][34] = { 0 };
+	uint8_t msg[4][256] = { 0 };
+	uint8_t otp[4][32] = { 0 };
+	uint8_t exp[4][32] = { 0 };
+	size_t i;
+	bool status;
+
+	status = true;
+
+	for (i = 0; i < 32; ++i)
+	{
+		cst[0][i] = (uint8_t)i;
+		cst[1][i] = (uint8_t)i;
+		cst[2][i] = (uint8_t)i;
+		cst[3][i] = (uint8_t)i;
+		key[0][i] = (uint8_t)i;
+		key[1][i] = (uint8_t)i;
+		key[2][i] = (uint8_t)i;
+		key[3][i] = (uint8_t)i;
+	}
+
+	key[0][32] = (uint8_t)1;
+	key[1][32] = (uint8_t)2;
+	key[2][32] = (uint8_t)3;
+	key[3][32] = (uint8_t)4;
+
+	for (i = 0; i < 256; ++i)
+	{
+		msg[0][i] = (uint8_t)i;
+		msg[1][i] = (uint8_t)i;
+		msg[2][i] = (uint8_t)i;
+		msg[3][i] = (uint8_t)i;
+	}
+
+	kmac256x4(otp[0], otp[1], otp[2], otp[3], 32, key[0], key[1], key[2], key[3], 34,
+		cst[0], cst[1], cst[2], cst[3], 16, msg[0], msg[1], msg[2], msg[3], 256);
+
+	qsc_kmac256_compute(exp[0], 32, msg[0], 256, key[0], 34, cst[0], 16);
+
+	if (qsc_intutils_are_equal8(exp[0], otp[0], sizeof(exp[0])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac256x4_equality: output does not match the known answer -KP1 \n");
+		status = false;
+	}
+
+	qsc_kmac256_compute(exp[1], 32, msg[1], 256, key[1], 34, cst[1], 16);
+
+	if (qsc_intutils_are_equal8(exp[1], otp[1], sizeof(exp[1])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac256x4_equality: output does not match the known answer -KP2 \n");
+		status = false;
+	}
+
+	qsc_kmac256_compute(exp[2], 32, msg[2], 256, key[2], 34, cst[2], 16);
+
+	if (qsc_intutils_are_equal8(exp[2], otp[2], sizeof(exp[2])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac256x4_equality: output does not match the known answer -KP3 \n");
+		status = false;
+	}
+
+	qsc_kmac256_compute(exp[3], 32, msg[3], 256, key[3], 34, cst[3], 16);
+
+	if (qsc_intutils_are_equal8(exp[3], otp[3], sizeof(exp[3])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac256x4_equality: output does not match the known answer -KP4 \n");
+		status = false;
+	}
+
+	return status;
+}
+
+bool qsctest_kmac512x4_equality()
+{
+	uint8_t cst[4][64] = { 0 };
+	uint8_t key[4][66] = { 0 };
+	uint8_t msg[4][256] = { 0 };
+	uint8_t otp[4][64] = { 0 };
+	uint8_t exp[4][64] = { 0 };
+	size_t i;
+	bool status;
+
+	status = true;
+
+	for (i = 0; i < 64; ++i)
+	{
+		cst[0][i] = (uint8_t)i;
+		cst[1][i] = (uint8_t)i;
+		cst[2][i] = (uint8_t)i;
+		cst[3][i] = (uint8_t)i;
+		key[0][i] = (uint8_t)i;
+		key[1][i] = (uint8_t)i;
+		key[2][i] = (uint8_t)i;
+		key[3][i] = (uint8_t)i;
+	}
+
+	key[0][64] = (uint8_t)1;
+	key[1][64] = (uint8_t)2;
+	key[2][64] = (uint8_t)3;
+	key[3][64] = (uint8_t)4;
+
+	for (i = 0; i < 256; ++i)
+	{
+		msg[0][i] = (uint8_t)i;
+		msg[1][i] = (uint8_t)i;
+		msg[2][i] = (uint8_t)i;
+		msg[3][i] = (uint8_t)i;
+	}
+
+	kmac512x4(otp[0], otp[1], otp[2], otp[3], 64, key[0], key[1], key[2], key[3], 66,
+		cst[0], cst[1], cst[2], cst[3], 16, msg[0], msg[1], msg[2], msg[3], 256);
+
+	qsc_kmac512_compute(exp[0], 64, msg[0], 256, key[0], 66, cst[0], 16);
+
+	if (qsc_intutils_are_equal8(exp[0], otp[0], sizeof(exp[0])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac512x4_equality: output does not match the known answer -KP1 \n");
+		status = false;
+	}
+
+	qsc_kmac512_compute(exp[1], 64, msg[1], 256, key[1], 66, cst[1], 16);
+
+	if (qsc_intutils_are_equal8(exp[1], otp[1], sizeof(exp[1])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac512x4_equality: output does not match the known answer -KP2 \n");
+		status = false;
+	}
+
+	qsc_kmac512_compute(exp[2], 64, msg[2], 256, key[2], 66, cst[2], 16);
+
+	if (qsc_intutils_are_equal8(exp[2], otp[2], sizeof(exp[2])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac512x4_equality: output does not match the known answer -KP3 \n");
+		status = false;
+	}
+
+	qsc_kmac512_compute(exp[3], 64, msg[3], 256, key[3], 66, cst[3], 16);
+
+	if (qsc_intutils_are_equal8(exp[3], otp[3], sizeof(exp[3])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac512x4_equality: output does not match the known answer -KP4 \n");
+		status = false;
+	}
+
+	return status;
+}
+
+bool qsctest_shake128x4_equality()
+{
+	uint8_t key[4][18] = { 0 };
+	uint8_t otp[4][168] = { 0 };
+	uint8_t exp[4][168] = { 0 };
+	size_t i;
+	bool status;
+
+	status = true;
+
+	for (i = 0; i < 16; ++i)
+	{
+		key[0][i] = (uint8_t)i;
+		key[1][i] = (uint8_t)i;
+		key[2][i] = (uint8_t)i;
+		key[3][i] = (uint8_t)i;
+	}
+
+	key[0][16] = (uint8_t)1;
+	key[1][16] = (uint8_t)2;
+	key[2][16] = (uint8_t)3;
+	key[3][16] = (uint8_t)4;
+
+	shake128x4(otp[0], otp[1], otp[2], otp[3], 168, key[0], key[1], key[2], key[3], 18);
+
+	qsc_shake128_compute(exp[0], 168, key[0], 18);
+
+	if (qsc_intutils_are_equal8(exp[0], otp[0], sizeof(exp[0])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake128x4_equality: output does not match the known answer -KP1 \n");
+		status = false;
+	}
+
+	qsc_shake128_compute(exp[1], 168, key[1], 18);
+
+	if (qsc_intutils_are_equal8(exp[1], otp[1], sizeof(exp[1])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake128x4_equality: output does not match the known answer -KP2 \n");
+		status = false;
+	}
+
+	qsc_shake128_compute(exp[2], 168, key[2], 18);
+
+	if (qsc_intutils_are_equal8(exp[2], otp[2], sizeof(exp[2])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake128x4_equality: output does not match the known answer -KP3 \n");
+		status = false;
+	}
+
+	qsc_shake128_compute(exp[3], 168, key[3], 18);
+
+	if (qsc_intutils_are_equal8(exp[3], otp[3], sizeof(exp[3])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake128x4_equality: output does not match the known answer -KP4 \n");
+		status = false;
+	}
+
+	return status;
+}
+
+bool qsctest_shake256x4_equality()
+{
+	uint8_t key[4][34] = { 0 };
+	uint8_t otp[4][136] = { 0 };
+	uint8_t exp[4][136] = { 0 };
+	size_t i;
+	bool status;
+
+	status = true;
+
+	for (i = 0; i < 32; ++i)
+	{
+		key[0][i] = (uint8_t)i;
+		key[1][i] = (uint8_t)i;
+		key[2][i] = (uint8_t)i;
+		key[3][i] = (uint8_t)i;
+	}
+
+	key[0][32] = (uint8_t)1;
+	key[1][32] = (uint8_t)2;
+	key[2][32] = (uint8_t)3;
+	key[3][32] = (uint8_t)4;
+
+	shake256x4(otp[0], otp[1], otp[2], otp[3], 136, key[0], key[1], key[2], key[3], 34);
+
+	qsc_shake256_compute(exp[0], 136, key[0], 34);
+
+	if (qsc_intutils_are_equal8(exp[0], otp[0], sizeof(exp[0])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake256x4_equality: output does not match the known answer -KP1 \n");
+		status = false;
+	}
+
+	qsc_shake256_compute(exp[1], 136, key[1], 34);
+
+	if (qsc_intutils_are_equal8(exp[1], otp[1], sizeof(exp[1])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake256x4_equality: output does not match the known answer -KP2 \n");
+		status = false;
+	}
+
+	qsc_shake256_compute(exp[2], 136, key[2], 34);
+
+	if (qsc_intutils_are_equal8(exp[2], otp[2], sizeof(exp[2])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake256x4_equality: output does not match the known answer -KP3 \n");
+		status = false;
+	}
+
+	qsc_shake256_compute(exp[3], 136, key[3], 34);
+
+	if (qsc_intutils_are_equal8(exp[3], otp[3], sizeof(exp[3])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake256x4_equality: output does not match the known answer -KP4 \n");
+		status = false;
+	}
+
+	return status;
+}
+
+bool qsctest_shake512x4_equality()
+{
+	uint8_t key[4][66] = { 0 };
+	uint8_t otp[4][72] = { 0 };
+	uint8_t exp[4][72] = { 0 };
+	size_t i;
+	bool status;
+
+	status = true;
+
+	for (i = 0; i < 64; ++i)
+	{
+		key[0][i] = (uint8_t)i;
+		key[1][i] = (uint8_t)i;
+		key[2][i] = (uint8_t)i;
+		key[3][i] = (uint8_t)i;
+	}
+
+	key[0][64] = (uint8_t)1;
+	key[1][64] = (uint8_t)2;
+	key[2][64] = (uint8_t)3;
+	key[3][64] = (uint8_t)4;
+
+	shake512x4(otp[0], otp[1], otp[2], otp[3], 72, key[0], key[1], key[2], key[3], 66);
+
+	qsc_shake512_compute(exp[0], 72, key[0], 66);
+
+	if (qsc_intutils_are_equal8(exp[0], otp[0], sizeof(exp[0])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake512x4_equality: output does not match the known answer -KP1 \n");
+		status = false;
+	}
+
+	qsc_shake512_compute(exp[1], 72, key[1], 66);
+
+	if (qsc_intutils_are_equal8(exp[1], otp[1], sizeof(exp[1])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake512x4_equality: output does not match the known answer -KP2 \n");
+		status = false;
+	}
+
+	qsc_shake512_compute(exp[2], 72, key[2], 66);
+
+	if (qsc_intutils_are_equal8(exp[2], otp[2], sizeof(exp[2])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake512x4_equality: output does not match the known answer -KP3 \n");
+		status = false;
+	}
+
+	qsc_shake512_compute(exp[3], 72, key[3], 66);
+
+	if (qsc_intutils_are_equal8(exp[3], otp[3], sizeof(exp[3])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake512x4_equality: output does not match the known answer -KP4 \n");
+		status = false;
+	}
+
+	return status;
+}
+#endif
+
+#if defined(QSC_SYSTEM_HAS_AVX512)
+bool qsctest_kmac128x8_equality()
+{
+	uint8_t cst[8][16] = { 0 };
+	uint8_t key[8][18] = { 0 };
+	uint8_t msg[8][256] = { 0 };
+	uint8_t otp[8][16] = { 0 };
+	uint8_t exp[8][16] = { 0 };
+	size_t i;
+	bool status;
+
+	status = true;
+
+	for (i = 0; i < 16; ++i)
+	{
+		cst[0][i] = (uint8_t)i;
+		cst[1][i] = (uint8_t)i;
+		cst[2][i] = (uint8_t)i;
+		cst[3][i] = (uint8_t)i;
+		cst[4][i] = (uint8_t)i;
+		cst[5][i] = (uint8_t)i;
+		cst[6][i] = (uint8_t)i;
+		cst[7][i] = (uint8_t)i;
+		key[0][i] = (uint8_t)i;
+		key[1][i] = (uint8_t)i;
+		key[2][i] = (uint8_t)i;
+		key[3][i] = (uint8_t)i;
+		key[4][i] = (uint8_t)i;
+		key[5][i] = (uint8_t)i;
+		key[6][i] = (uint8_t)i;
+		key[7][i] = (uint8_t)i;
+	}
+
+	key[0][16] = (uint8_t)1;
+	key[1][16] = (uint8_t)2;
+	key[2][16] = (uint8_t)3;
+	key[3][16] = (uint8_t)4;
+	key[4][16] = (uint8_t)1;
+	key[5][16] = (uint8_t)2;
+	key[6][16] = (uint8_t)3;
+	key[7][16] = (uint8_t)4;
+
+	for (i = 0; i < 256; ++i)
+	{
+		msg[0][i] = (uint8_t)i;
+		msg[1][i] = (uint8_t)i;
+		msg[2][i] = (uint8_t)i;
+		msg[3][i] = (uint8_t)i;
+		msg[4][i] = (uint8_t)i;
+		msg[5][i] = (uint8_t)i;
+		msg[6][i] = (uint8_t)i;
+		msg[7][i] = (uint8_t)i;
+	}
+
+	kmac128x8(otp[0], otp[1], otp[2], otp[3], otp[4], otp[5], otp[6], otp[7], 16, 
+		key[0], key[1], key[2], key[3], key[4], key[5], key[6], key[7], 18,
+		cst[0], cst[1], cst[2], cst[3], cst[4], cst[5], cst[6], cst[7], 16, 
+		msg[0], msg[1], msg[2], msg[3], msg[4], msg[5], msg[6], msg[7], 256);
+
+	qsc_kmac128_compute(exp[0], 16, msg[0], 256, key[0], 18, cst[0], 16);
+
+	if (qsc_intutils_are_equal8(exp[0], otp[0], sizeof(exp[0])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac128x8_equality: output does not match the known answer -KP1 \n");
+		status = false;
+	}
+
+	qsc_kmac128_compute(exp[1], 16, msg[1], 256, key[1], 18, cst[1], 16);
+
+	if (qsc_intutils_are_equal8(exp[1], otp[1], sizeof(exp[1])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac128x8_equality: output does not match the known answer -KP2 \n");
+		status = false;
+	}
+
+	qsc_kmac128_compute(exp[2], 16, msg[2], 256, key[2], 18, cst[2], 16);
+
+	if (qsc_intutils_are_equal8(exp[2], otp[2], sizeof(exp[2])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac128x8_equality: output does not match the known answer -KP3 \n");
+		status = false;
+	}
+
+	qsc_kmac128_compute(exp[3], 16, msg[3], 256, key[3], 18, cst[3], 16);
+
+	if (qsc_intutils_are_equal8(exp[3], otp[3], sizeof(exp[3])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac128x8_equality: output does not match the known answer -KP4 \n");
+		status = false;
+	}
+
+	qsc_kmac128_compute(exp[4], 16, msg[4], 256, key[4], 18, cst[4], 16);
+
+	if (qsc_intutils_are_equal8(exp[4], otp[4], sizeof(exp[4])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac128x8_equality: output does not match the known answer -KP5 \n");
+		status = false;
+	}
+
+	qsc_kmac128_compute(exp[5], 16, msg[5], 256, key[5], 18, cst[5], 16);
+
+	if (qsc_intutils_are_equal8(exp[5], otp[5], sizeof(exp[5])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac128x8_equality: output does not match the known answer -KP6 \n");
+		status = false;
+	}
+
+	qsc_kmac128_compute(exp[6], 16, msg[6], 256, key[6], 18, cst[6], 16);
+
+	if (qsc_intutils_are_equal8(exp[6], otp[6], sizeof(exp[6])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac128x8_equality: output does not match the known answer -KP7 \n");
+		status = false;
+	}
+
+	qsc_kmac128_compute(exp[7], 16, msg[7], 256, key[7], 18, cst[7], 16);
+
+	if (qsc_intutils_are_equal8(exp[7], otp[7], sizeof(exp[7])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac128x8_equality: output does not match the known answer -KP8 \n");
+		status = false;
+	}
+
+	return status;
+}
+
+bool qsctest_kmac256x8_equality()
+{
+	uint8_t cst[8][32] = { 0 };
+	uint8_t key[8][34] = { 0 };
+	uint8_t msg[8][256] = { 0 };
+	uint8_t otp[8][32] = { 0 };
+	uint8_t exp[8][32] = { 0 };
+	size_t i;
+	bool status;
+
+	status = true;
+
+	for (i = 0; i < 32; ++i)
+	{
+		cst[0][i] = (uint8_t)i;
+		cst[1][i] = (uint8_t)i;
+		cst[2][i] = (uint8_t)i;
+		cst[3][i] = (uint8_t)i;
+		cst[4][i] = (uint8_t)i;
+		cst[5][i] = (uint8_t)i;
+		cst[6][i] = (uint8_t)i;
+		cst[7][i] = (uint8_t)i;
+		key[0][i] = (uint8_t)i;
+		key[1][i] = (uint8_t)i;
+		key[2][i] = (uint8_t)i;
+		key[3][i] = (uint8_t)i;
+		key[4][i] = (uint8_t)i;
+		key[5][i] = (uint8_t)i;
+		key[6][i] = (uint8_t)i;
+		key[7][i] = (uint8_t)i;
+	}
+
+	key[0][32] = (uint8_t)1;
+	key[1][32] = (uint8_t)2;
+	key[2][32] = (uint8_t)3;
+	key[3][32] = (uint8_t)4;
+	key[4][32] = (uint8_t)4;
+	key[5][32] = (uint8_t)5;
+	key[6][32] = (uint8_t)6;
+	key[7][32] = (uint8_t)7;
+
+	for (i = 0; i < 256; ++i)
+	{
+		msg[0][i] = (uint8_t)i;
+		msg[1][i] = (uint8_t)i;
+		msg[2][i] = (uint8_t)i;
+		msg[3][i] = (uint8_t)i;
+		msg[4][i] = (uint8_t)i;
+		msg[5][i] = (uint8_t)i;
+		msg[6][i] = (uint8_t)i;
+		msg[7][i] = (uint8_t)i;
+	}
+
+	kmac256x8(otp[0], otp[1], otp[2], otp[3], otp[4], otp[5], otp[6], otp[7], 32, 
+		key[0], key[1], key[2], key[3], key[4], key[5], key[6], key[7], 34,
+		cst[0], cst[1], cst[2], cst[3], cst[4], cst[5], cst[6], cst[7], 16, 
+		msg[0], msg[1], msg[2], msg[3], msg[4], msg[5], msg[6], msg[7], 256);
+
+	qsc_kmac256_compute(exp[0], 32, msg[0], 256, key[0], 34, cst[0], 16);
+
+	if (qsc_intutils_are_equal8(exp[0], otp[0], sizeof(exp[0])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac256x8_equality: output does not match the known answer -KP1 \n");
+		status = false;
+	}
+
+	qsc_kmac256_compute(exp[1], 32, msg[1], 256, key[1], 34, cst[1], 16);
+
+	if (qsc_intutils_are_equal8(exp[1], otp[1], sizeof(exp[1])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac256x8_equality: output does not match the known answer -KP2 \n");
+		status = false;
+	}
+
+	qsc_kmac256_compute(exp[2], 32, msg[2], 256, key[2], 34, cst[2], 16);
+
+	if (qsc_intutils_are_equal8(exp[2], otp[2], sizeof(exp[2])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac256x8_equality: output does not match the known answer -KP3 \n");
+		status = false;
+	}
+
+	qsc_kmac256_compute(exp[3], 32, msg[3], 256, key[3], 34, cst[3], 16);
+
+	if (qsc_intutils_are_equal8(exp[3], otp[3], sizeof(exp[3])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac256x8_equality: output does not match the known answer -KP4 \n");
+		status = false;
+	}
+
+	qsc_kmac256_compute(exp[4], 32, msg[4], 256, key[4], 34, cst[4], 16);
+
+	if (qsc_intutils_are_equal8(exp[4], otp[4], sizeof(exp[4])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac256x8_equality: output does not match the known answer -KP5 \n");
+		status = false;
+	}
+
+	qsc_kmac256_compute(exp[5], 32, msg[5], 256, key[5], 34, cst[5], 16);
+
+	if (qsc_intutils_are_equal8(exp[5], otp[5], sizeof(exp[5])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac256x8_equality: output does not match the known answer -KP6 \n");
+		status = false;
+	}
+
+	qsc_kmac256_compute(exp[6], 32, msg[6], 256, key[6], 34, cst[6], 16);
+
+	if (qsc_intutils_are_equal8(exp[6], otp[6], sizeof(exp[6])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac256x8_equality: output does not match the known answer -KP7 \n");
+		status = false;
+	}
+
+	qsc_kmac256_compute(exp[7], 32, msg[7], 256, key[7], 34, cst[7], 16);
+
+	if (qsc_intutils_are_equal8(exp[7], otp[7], sizeof(exp[7])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac256x8_equality: output does not match the known answer -KP8 \n");
+		status = false;
+	}
+
+	return status;
+}
+
+bool qsctest_kmac512x8_equality()
+{
+	uint8_t cst[8][64] = { 0 };
+	uint8_t key[8][66] = { 0 };
+	uint8_t msg[8][256] = { 0 };
+	uint8_t otp[8][64] = { 0 };
+	uint8_t exp[8][64] = { 0 };
+	size_t i;
+	bool status;
+
+	status = true;
+
+	for (i = 0; i < 64; ++i)
+	{
+		cst[0][i] = (uint8_t)i;
+		cst[1][i] = (uint8_t)i;
+		cst[2][i] = (uint8_t)i;
+		cst[3][i] = (uint8_t)i;
+		cst[4][i] = (uint8_t)i;
+		cst[5][i] = (uint8_t)i;
+		cst[6][i] = (uint8_t)i;
+		cst[7][i] = (uint8_t)i;
+		key[0][i] = (uint8_t)i;
+		key[1][i] = (uint8_t)i;
+		key[2][i] = (uint8_t)i;
+		key[3][i] = (uint8_t)i;
+		key[4][i] = (uint8_t)i;
+		key[5][i] = (uint8_t)i;
+		key[6][i] = (uint8_t)i;
+		key[7][i] = (uint8_t)i;
+	}
+
+	key[0][64] = (uint8_t)1;
+	key[1][64] = (uint8_t)2;
+	key[2][64] = (uint8_t)3;
+	key[3][64] = (uint8_t)4;
+	key[4][64] = (uint8_t)5;
+	key[5][64] = (uint8_t)6;
+	key[6][64] = (uint8_t)7;
+	key[7][64] = (uint8_t)8;
+
+	for (i = 0; i < 256; ++i)
+	{
+		msg[0][i] = (uint8_t)i;
+		msg[1][i] = (uint8_t)i;
+		msg[2][i] = (uint8_t)i;
+		msg[3][i] = (uint8_t)i;
+		msg[4][i] = (uint8_t)i;
+		msg[5][i] = (uint8_t)i;
+		msg[6][i] = (uint8_t)i;
+		msg[7][i] = (uint8_t)i;
+	}
+
+	kmac512x8(otp[0], otp[1], otp[2], otp[3], otp[4], otp[5], otp[6], otp[7], 64, 
+		key[0], key[1], key[2], key[3], key[4], key[5], key[6], key[7], 66,
+		cst[0], cst[1], cst[2], cst[3], cst[4], cst[5], cst[6], cst[7], 16, 
+		msg[0], msg[1], msg[2], msg[3], msg[4], msg[5], msg[6], msg[7], 256);
+
+	qsc_kmac512_compute(exp[0], 64, msg[0], 256, key[0], 66, cst[0], 16);
+
+	if (qsc_intutils_are_equal8(exp[0], otp[0], sizeof(exp[0])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac512x8_equality: output does not match the known answer -KP1 \n");
+		status = false;
+	}
+
+	qsc_kmac512_compute(exp[1], 64, msg[1], 256, key[1], 66, cst[1], 16);
+
+	if (qsc_intutils_are_equal8(exp[1], otp[1], sizeof(exp[1])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac512x8_equality: output does not match the known answer -KP2 \n");
+		status = false;
+	}
+
+	qsc_kmac512_compute(exp[2], 64, msg[2], 256, key[2], 66, cst[2], 16);
+
+	if (qsc_intutils_are_equal8(exp[2], otp[2], sizeof(exp[2])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac512x8_equality: output does not match the known answer -KP3 \n");
+		status = false;
+	}
+
+	qsc_kmac512_compute(exp[3], 64, msg[3], 256, key[3], 66, cst[3], 16);
+
+	if (qsc_intutils_are_equal8(exp[3], otp[3], sizeof(exp[3])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac512x8_equality: output does not match the known answer -KP4 \n");
+		status = false;
+	}
+
+	qsc_kmac512_compute(exp[4], 64, msg[4], 256, key[4], 66, cst[4], 16);
+
+	if (qsc_intutils_are_equal8(exp[4], otp[4], sizeof(exp[4])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac512x8_equality: output does not match the known answer -KP5 \n");
+		status = false;
+	}
+
+	qsc_kmac512_compute(exp[5], 64, msg[5], 256, key[5], 66, cst[5], 16);
+
+	if (qsc_intutils_are_equal8(exp[5], otp[5], sizeof(exp[5])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac512x8_equality: output does not match the known answer -KP6 \n");
+		status = false;
+	}
+
+	qsc_kmac512_compute(exp[6], 64, msg[6], 256, key[6], 66, cst[6], 16);
+
+	if (qsc_intutils_are_equal8(exp[6], otp[6], sizeof(exp[6])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac512x8_equality: output does not match the known answer -KP7 \n");
+		status = false;
+	}
+
+	qsc_kmac512_compute(exp[7], 64, msg[7], 256, key[7], 66, cst[7], 16);
+
+	if (qsc_intutils_are_equal8(exp[7], otp[7], sizeof(exp[7])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_kmac512x8_equality: output does not match the known answer -KP8 \n");
+		status = false;
+	}
+
+	return status;
+}
+
+bool qsctest_shake128x8_equality()
+{
+	uint8_t key[8][18] = { 0 };
+	uint8_t otp[8][168] = { 0 };
+	uint8_t exp[8][168] = { 0 };
+	size_t i;
+	bool status;
+
+	status = true;
+
+	for (i = 0; i < 16; ++i)
+	{
+		key[0][i] = (uint8_t)i;
+		key[1][i] = (uint8_t)i;
+		key[2][i] = (uint8_t)i;
+		key[3][i] = (uint8_t)i;
+		key[4][i] = (uint8_t)i;
+		key[5][i] = (uint8_t)i;
+		key[6][i] = (uint8_t)i;
+		key[7][i] = (uint8_t)i;
+	}
+
+	key[0][16] = (uint8_t)1;
+	key[1][16] = (uint8_t)2;
+	key[2][16] = (uint8_t)3;
+	key[3][16] = (uint8_t)4;
+	key[4][16] = (uint8_t)1;
+	key[5][16] = (uint8_t)2;
+	key[6][16] = (uint8_t)3;
+	key[7][16] = (uint8_t)4;
+
+	shake128x8(otp[0], otp[1], otp[2], otp[3], otp[4], otp[5], otp[6], otp[7], 168,
+		key[0], key[1], key[2], key[3], key[4], key[5], key[6], key[7], 18);
+
+	qsc_shake128_compute(exp[0], 168, key[0], 18);
+
+	if (qsc_intutils_are_equal8(exp[0], otp[0], sizeof(exp[0])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake128x8_equality: output does not match the known answer -KP1 \n");
+		status = false;
+	}
+
+	qsc_shake128_compute(exp[1], 168, key[1], 18);
+
+	if (qsc_intutils_are_equal8(exp[1], otp[1], sizeof(exp[1])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake128x8_equality: output does not match the known answer -KP2 \n");
+		status = false;
+	}
+
+	qsc_shake128_compute(exp[2], 168, key[2], 18);
+
+	if (qsc_intutils_are_equal8(exp[2], otp[2], sizeof(exp[2])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake128x8_equality: output does not match the known answer -KP3 \n");
+		status = false;
+	}
+
+	qsc_shake128_compute(exp[3], 168, key[3], 18);
+
+	if (qsc_intutils_are_equal8(exp[3], otp[3], sizeof(exp[3])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake128x8_equality: output does not match the known answer -KP4 \n");
+		status = false;
+	}
+
+	qsc_shake128_compute(exp[4], 168, key[4], 18);
+
+	if (qsc_intutils_are_equal8(exp[4], otp[4], sizeof(exp[4])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake128x8_equality: output does not match the known answer -KP5 \n");
+		status = false;
+	}
+
+	qsc_shake128_compute(exp[5], 168, key[5], 18);
+
+	if (qsc_intutils_are_equal8(exp[5], otp[5], sizeof(exp[5])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake128x8_equality: output does not match the known answer -KP6 \n");
+		status = false;
+	}
+
+	qsc_shake128_compute(exp[6], 168, key[6], 18);
+
+	if (qsc_intutils_are_equal8(exp[6], otp[6], sizeof(exp[6])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake128x8_equality: output does not match the known answer -KP7 \n");
+		status = false;
+	}
+
+	qsc_shake128_compute(exp[7], 168, key[7], 18);
+
+	if (qsc_intutils_are_equal8(exp[7], otp[7], sizeof(exp[7])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake128x8_equality: output does not match the known answer -KP8 \n");
+		status = false;
+	}
+
+	return status;
+}
+
+bool qsctest_shake256x8_equality()
+{
+	uint8_t key[8][34] = { 0 };
+	uint8_t otp[8][136] = { 0 };
+	uint8_t exp[8][136] = { 0 };
+	size_t i;
+	bool status;
+
+	status = true;
+
+	for (i = 0; i < 32; ++i)
+	{
+		key[0][i] = (uint8_t)i;
+		key[1][i] = (uint8_t)i;
+		key[2][i] = (uint8_t)i;
+		key[3][i] = (uint8_t)i;
+		key[4][i] = (uint8_t)i;
+		key[5][i] = (uint8_t)i;
+		key[6][i] = (uint8_t)i;
+		key[7][i] = (uint8_t)i;
+	}
+
+	key[0][32] = (uint8_t)1;
+	key[1][32] = (uint8_t)2;
+	key[2][32] = (uint8_t)3;
+	key[3][32] = (uint8_t)4;
+	key[4][32] = (uint8_t)1;
+	key[5][32] = (uint8_t)2;
+	key[6][32] = (uint8_t)3;
+	key[7][32] = (uint8_t)4;
+
+	shake256x8(otp[0], otp[1], otp[2], otp[3], otp[4], otp[5], otp[6], otp[7], 136, 
+		key[0], key[1], key[2], key[3], key[4], key[5], key[6], key[7], 34);
+
+	qsc_shake256_compute(exp[0], 136, key[0], 34);
+
+	if (qsc_intutils_are_equal8(exp[0], otp[0], sizeof(exp[0])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake256x8_equality: output does not match the known answer -KP1 \n");
+		status = false;
+	}
+
+	qsc_shake256_compute(exp[1], 136, key[1], 34);
+
+	if (qsc_intutils_are_equal8(exp[1], otp[1], sizeof(exp[1])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake256x8_equality: output does not match the known answer -KP2 \n");
+		status = false;
+	}
+
+	qsc_shake256_compute(exp[2], 136, key[2], 34);
+
+	if (qsc_intutils_are_equal8(exp[2], otp[2], sizeof(exp[2])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake256x8_equality: output does not match the known answer -KP3 \n");
+		status = false;
+	}
+
+	qsc_shake256_compute(exp[3], 136, key[3], 34);
+
+	if (qsc_intutils_are_equal8(exp[3], otp[3], sizeof(exp[3])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake256x8_equality: output does not match the known answer -KP4 \n");
+		status = false;
+	}
+
+	qsc_shake256_compute(exp[4], 136, key[4], 34);
+
+	if (qsc_intutils_are_equal8(exp[4], otp[4], sizeof(exp[4])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake256x8_equality: output does not match the known answer -KP5 \n");
+		status = false;
+	}
+
+	qsc_shake256_compute(exp[5], 136, key[5], 34);
+
+	if (qsc_intutils_are_equal8(exp[5], otp[5], sizeof(exp[5])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake256x8_equality: output does not match the known answer -KP6 \n");
+		status = false;
+	}
+
+	qsc_shake256_compute(exp[6], 136, key[6], 34);
+
+	if (qsc_intutils_are_equal8(exp[6], otp[6], sizeof(exp[6])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake256x8_equality: output does not match the known answer -KP7 \n");
+		status = false;
+	}
+
+	qsc_shake256_compute(exp[7], 136, key[7], 34);
+
+	if (qsc_intutils_are_equal8(exp[7], otp[7], sizeof(exp[7])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake256x8_equality: output does not match the known answer -KP8 \n");
+		status = false;
+	}
+
+	return status;
+}
+
+bool qsctest_shake512x8_equality()
+{
+	uint8_t key[8][66] = { 0 };
+	uint8_t otp[8][72] = { 0 };
+	uint8_t exp[8][72] = { 0 };
+	size_t i;
+	bool status;
+
+	status = true;
+
+	for (i = 0; i < 64; ++i)
+	{
+		key[0][i] = (uint8_t)i;
+		key[1][i] = (uint8_t)i;
+		key[2][i] = (uint8_t)i;
+		key[3][i] = (uint8_t)i;
+		key[4][i] = (uint8_t)i;
+		key[5][i] = (uint8_t)i;
+		key[6][i] = (uint8_t)i;
+		key[7][i] = (uint8_t)i;
+	}
+
+	key[0][64] = (uint8_t)1;
+	key[1][64] = (uint8_t)2;
+	key[2][64] = (uint8_t)3;
+	key[3][64] = (uint8_t)4;
+	key[4][64] = (uint8_t)1;
+	key[5][64] = (uint8_t)2;
+	key[6][64] = (uint8_t)3;
+	key[7][64] = (uint8_t)4;
+
+	shake512x8(otp[0], otp[1], otp[2], otp[3], otp[4], otp[5], otp[6], otp[7], 72,
+		key[0], key[1], key[2], key[3], key[4], key[5], key[6], key[7], 66);
+
+	qsc_shake512_compute(exp[0], 72, key[0], 66);
+
+	if (qsc_intutils_are_equal8(exp[0], otp[0], sizeof(exp[0])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake512x8_equality: output does not match the known answer -KP1 \n");
+		status = false;
+	}
+
+	qsc_shake512_compute(exp[1], 72, key[1], 66);
+
+	if (qsc_intutils_are_equal8(exp[1], otp[1], sizeof(exp[1])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake512x8_equality: output does not match the known answer -KP2 \n");
+		status = false;
+	}
+
+	qsc_shake512_compute(exp[2], 72, key[2], 66);
+
+	if (qsc_intutils_are_equal8(exp[2], otp[2], sizeof(exp[2])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake512x8_equality: output does not match the known answer -KP3 \n");
+		status = false;
+	}
+
+	qsc_shake512_compute(exp[3], 72, key[3], 66);
+
+	if (qsc_intutils_are_equal8(exp[3], otp[3], sizeof(exp[3])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake512x8_equality: output does not match the known answer -KP4 \n");
+		status = false;
+	}
+
+	qsc_shake512_compute(exp[4], 72, key[4], 66);
+
+	if (qsc_intutils_are_equal8(exp[4], otp[4], sizeof(exp[4])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake512x8_equality: output does not match the known answer -KP5 \n");
+		status = false;
+	}
+
+	qsc_shake512_compute(exp[5], 72, key[5], 66);
+
+	if (qsc_intutils_are_equal8(exp[5], otp[5], sizeof(exp[5])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake512x8_equality: output does not match the known answer -KP6 \n");
+		status = false;
+	}
+
+	qsc_shake512_compute(exp[6], 72, key[6], 66);
+
+	if (qsc_intutils_are_equal8(exp[6], otp[6], sizeof(exp[6])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake512x8_equality: output does not match the known answer -KP7 \n");
+		status = false;
+	}
+
+	qsc_shake512_compute(exp[7], 72, key[7], 66);
+
+	if (qsc_intutils_are_equal8(exp[7], otp[7], sizeof(exp[7])) == false)
+	{
+		qsctest_print_safe("Failure! qsctest_shake512x8_equality: output does not match the known answer -KP8 \n");
+		status = false;
+	}
+
+	return status;
+}
+
+static void scatter_gather_test()
+{
+	// internal reference -remove
+	uint8_t inp[256] = { 0 };
+	uint8_t otp[256] = { 0 };
+	__m256i t[8] = { 0 };
+	__m256i idx;
+	__m256i idx2;
+	size_t i;
+	size_t pos;
+
+	pos = 0;
+
+	for (i = 0; i < sizeof(inp); ++i)
+	{
+		inp[i] = (uint8_t)i;
+	}
+
+	idx = _mm256_set_epi64x((int64_t)&inp[192], (int64_t)&inp[128], (int64_t)&inp[64], (int64_t)&inp[0]);
+
+	for (i = 0; i < 8; ++i)
+	{
+		t[i] = _mm256_i64gather_epi64((int64_t*)pos, idx, 1);
+		pos += sizeof(uint64_t);
+	}
+
+	pos = 0;
+
+	for (i = 0; i < 8; ++i)
+	{
+		idx2 = _mm256_set_epi64x(0xC0ULL + pos, 0x80ULL + pos, 0x40ULL + pos, pos);
+		_mm256_i64scatter_epi64(otp, idx2, t[i], 1);
+		pos += sizeof(uint64_t);
+	}
+}
+#endif
+
 void qsctest_sha3_run()
 {
+	qsctest_shake_256_kat();
+
 	if (qsctest_cshake_256_kat() == true)
 	{
 		qsctest_print_safe("Success! Passed the cSHAKE-256 KAT test. \n");
@@ -1207,4 +2326,120 @@ void qsctest_sha3_run()
 	{
 		qsctest_print_safe("Failure! Failed the KPA-512 KAT test. \n");
 	}
+
+#if defined(QSC_SYSTEM_HAS_AVX2)
+
+	if (qsctest_kmac128x4_equality() == true)
+	{
+		qsctest_print_safe("Success! Passed the KMAC-512 4x SIMD equality test. \n");
+	}
+	else
+	{
+		qsctest_print_safe("Failure! Failed the KMAC-512 4x SIMD equality test. \n");
+	}
+
+	if (qsctest_kmac256x4_equality() == true)
+	{
+		qsctest_print_safe("Success! Passed the KMAC-128 4x SIMD equality test. \n");
+	}
+	else
+	{
+		qsctest_print_safe("Failure! Failed the KMAC-128 4x SIMD equality test. \n");
+	}
+
+	if (qsctest_kmac512x4_equality() == true)
+	{
+		qsctest_print_safe("Success! Passed the KMAC-256 4x SIMD equality test. \n");
+	}
+	else
+	{
+		qsctest_print_safe("Failure! Failed the KMAC-256 4x SIMD equality test. \n");
+	}
+
+	if (qsctest_shake128x4_equality() == true)
+	{
+		qsctest_print_safe("Success! Passed the SHAKE-128 4x SIMD equality test. \n");
+	}
+	else
+	{
+		qsctest_print_safe("Failure! Failed the SHAKE-128 4x SIMD equality test. \n");
+	}
+
+	if (qsctest_shake256x4_equality() == true)
+	{
+		qsctest_print_safe("Success! Passed the SHAKE-256 4x SIMD equality test. \n");
+	}
+	else
+	{
+		qsctest_print_safe("Failure! Failed the SHAKE-256 4x SIMD equality test. \n");
+	}
+
+	if (qsctest_shake512x4_equality() == true)
+	{
+		qsctest_print_safe("Success! Passed the SHAKE-512 4x SIMD equality test. \n");
+	}
+	else
+	{
+		qsctest_print_safe("Failure! Failed the SHAKE-512 4x SIMD equality test. \n");
+	}
+
+#endif
+
+#if defined(QSC_SYSTEM_HAS_AVX512)
+
+	if (qsctest_kmac128x8_equality() == true)
+	{
+		qsctest_print_safe("Success! Passed the KMAC-128 8x SIMD equality test. \n");
+	}
+	else
+	{
+		qsctest_print_safe("Failure! Failed the KMAC-128 8x SIMD equality test. \n");
+	}
+
+	if (qsctest_kmac256x8_equality() == true)
+	{
+		qsctest_print_safe("Success! Passed the KMAC-256 8x SIMD equality test. \n");
+	}
+	else
+	{
+		qsctest_print_safe("Failure! Failed the KMAC-256 8x SIMD equality test. \n");
+	}
+
+	if (qsctest_kmac512x8_equality() == true)
+	{
+		qsctest_print_safe("Success! Passed the KMAC-512 8x SIMD equality test. \n");
+	}
+	else
+	{
+		qsctest_print_safe("Failure! Failed the KMAC-512 8x SIMD equality test. \n");
+	}
+
+	if (qsctest_shake128x8_equality() == true)
+	{
+		qsctest_print_safe("Success! Passed the SHAKE-128 8x SIMD equality test. \n");
+	}
+	else
+	{
+		qsctest_print_safe("Failure! Failed the SHAKE-128 8x SIMD equality test. \n");
+	}
+
+	if (qsctest_shake256x8_equality() == true)
+	{
+		qsctest_print_safe("Success! Passed the SHAKE-256 8x SIMD equality test. \n");
+	}
+	else
+	{
+		qsctest_print_safe("Failure! Failed the SHAKE-256 8x SIMD equality test. \n");
+	}
+
+	if (qsctest_shake512x8_equality() == true)
+	{
+		qsctest_print_safe("Success! Passed the SHAKE-512 8x SIMD equality test. \n");
+	}
+	else
+	{
+		qsctest_print_safe("Failure! Failed the SHAKE-512 8x SIMD equality test. \n");
+	}
+
+#endif
 }

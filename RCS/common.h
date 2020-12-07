@@ -138,6 +138,20 @@
 #	endif
 #endif
 
+// 32 or 64 bit architecture
+#if (defined(__x86_64__) || defined(__amd64__) || defined(_M_X64))
+#	define QSC_ARCH_64
+#else
+#	define QSC_ARCH_32
+#endif
+
+// network architecture
+#if defined(_WIN64) || defined(_WIN32) || defined(__CYGWIN__)
+#	define QSC_SYSTEM_WINDOWS_SOCKETS
+#else
+#	define QSC_SYSTEM_BERKELY_SOCKETS
+#endif
+
 #if !defined(__clang__) && !defined(__GNUC__)
 #	ifdef __attribute__
 #		undef __attribute__
@@ -171,6 +185,12 @@
 #	endif
 #else
 #	define QSC_EXPORT_API
+#endif
+
+#if defined(__GNUC__)
+#	define QSC_CACHE_ALIGNED __attribute__((aligned(64)))
+#elif defined(_MSC_VER)
+#	define QSC_CACHE_ALIGNED __declspec(align(64))
 #endif
 
 #if defined(QSC_SYSTEM_ARCH_X64) || defined(QSC_SYSTEM_ARCH_ARM64) || defined(QSC_SYSTEM_ARCH_IA64) || defined(QSC_SYSTEM_ARCH_AMD64) || defined(QSC_SYSTEM_ARCH_ARM64) || defined(QSC_SYSTEM_ARCH_SPARC64)
