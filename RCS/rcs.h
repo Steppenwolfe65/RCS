@@ -143,7 +143,7 @@
 * \def QSC_RCS_KPA_AUTHENTICATION
 * \brief Toggles authentication between KMAC and KPA, default is KPA.
 */
-#	define QSC_RCS_KPA_AUTHENTICATION
+//#	define QSC_RCS_KPA_AUTHENTICATION /* KPA requires large input blocks, defaults to kmac */
 #endif
 
 /*!
@@ -219,11 +219,11 @@ QSC_EXPORT_API typedef enum
 */
 QSC_EXPORT_API typedef struct
 {
-	const uint8_t* key;				/*!< The input cipher key */
-	size_t keylen;					/*!< The length in bytes of the cipher key */
-	uint8_t* nonce;					/*!< The nonce or initialization vector */
-	const uint8_t* info;			/*!< The information tweak */
-	size_t infolen;					/*!< The length in bytes of the information tweak */
+	const uint8_t* key;					/*!< The input cipher key */
+	size_t keylen;						/*!< The length in bytes of the cipher key */
+	uint8_t* nonce;						/*!< The nonce or initialization vector */
+	const uint8_t* info;				/*!< The information tweak */
+	size_t infolen;						/*!< The length in bytes of the information tweak */
 } qsc_rcs_keyparams;
 
 /*! 
@@ -232,25 +232,25 @@ QSC_EXPORT_API typedef struct
 */
 QSC_EXPORT_API typedef struct
 {
-	rcs_cipher_type ctype;			/*!< The cipher type; RCS-256 or RCS-512 */
+	rcs_cipher_type ctype;				/*!< The cipher type; RCS-256 or RCS-512 */
 #if defined(QSC_RCS_AESNI_ENABLED)
-	__m128i roundkeys[62];			/*!< The 128-bit integer round-key array */
+	__m128i roundkeys[62];				/*!< The 128-bit integer round-key array */
 #	if defined(QSC_SYSTEM_HAS_AVX512)
-		__m512i roundkeysw[31];		/*!< The 512-bit integer round-key array */
+		__m512i roundkeysw[31];			/*!< The 512-bit integer round-key array */
 #	endif
 #else
-	uint32_t roundkeys[248];		/*!< The round-keys 32-bit subkey array */
+	uint32_t roundkeys[248];			/*!< The round-keys 32-bit subkey array */
 #endif
-	size_t roundkeylen;				/*!< The round-key array length */
-	size_t rounds;					/*!< The number of transformation rounds */
+	size_t roundkeylen;					/*!< The round-key array length */
+	size_t rounds;						/*!< The number of transformation rounds */
 #if defined(QSC_RCS_KPA_AUTHENTICATION)
-	qsc_kpa_state kstate;			/*!< The KPA state structure */
+	qsc_kpa_state kstate;				/*!< The KPA state structure */
 #else
-	qsc_keccak_state kstate;		/*!< The keccak state structure */
+	qsc_keccak_state kstate;			/*!< The keccak state structure */
 #endif
-	uint8_t* nonce;					/*!< The nonce or initialization vector */
-	uint64_t counter;				/*!< the processed bytes counter */
-	bool encrypt;					/*!< the transformation mode; true for encryption */
+	uint8_t nonce[QSC_RCS_NONCE_SIZE];	/*!< The nonce or initialization vector */
+	uint64_t counter;					/*!< the processed bytes counter */
+	bool encrypt;						/*!< the transformation mode; true for encryption */
 } qsc_rcs_state;
 
 /* public functions */
