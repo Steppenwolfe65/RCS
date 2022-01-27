@@ -1,45 +1,38 @@
-/* The GPL version 3 License (GPLv3)
+/* The AGPL version 3 License (AGPLv3)
 *
-* Copyright (c) 2020 Digital Freedom Defence Inc.
+* Copyright (c) 2021 Digital Freedom Defence Inc.
 * This file is part of the QSC Cryptographic library
 *
 * This program is free software : you can redistribute it and / or modify
-* it under the terms of the GNU General Public License as published by
+* it under the terms of the GNU Affero General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
 *
 * This program is distributed in the hope that it will be useful,
 * but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
-* GNU General Public License for more details.
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU Affero General Public License for more details.
 *
-* You should have received a copy of the GNU General Public License
+* You should have received a copy of the GNU Affero General Public License
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
-*
-*
-* Implementation Details:
-* An implementation of supporting integer based functions
-* Written by John G. Underhill
-* Updated on January 20, 2020
-* Contact: develop@vtdev.com */
-
-/*
-* \file intutils.h
-* \brief <b>Integer utilities; supporting integer related functions</b> \n
-* This file contains common integer functions
-* August 7, 2019
 */
 
 #ifndef QSC_INTUTILS_H
 #define QSC_INTUTILS_H
 
 #include "common.h"
+#include "intrinsics.h"
+
+/*
+* \file intutils.h
+* \brief This file contains common integer functions
+*/
 
 /**
-* \brief Compare two byte 8-bit integer for equality
+* \brief Compares two byte 8-bit integers for equality
 *
-* \param a: The first array to compare
-* \param b: The second array to compare
+* \param a: [const] The first array to compare
+* \param b: [const] The second array to compare
 * \param length: The number of bytes to compare
 * \return Returns true for equal values
 */
@@ -106,7 +99,7 @@ QSC_EXPORT_API void qsc_intutils_be8increment(uint8_t* output, size_t outlen);
 * \brief Byte reverse an array of 32-bit integers
 *
 * \param destination: the destination array
-* \param source: the source array
+* \param source: [const] the source array
 * \param length: the length of the integer array
 */
 QSC_EXPORT_API void qsc_intutils_bswap32(uint32_t* destination, const uint32_t* source, size_t length);
@@ -115,7 +108,7 @@ QSC_EXPORT_API void qsc_intutils_bswap32(uint32_t* destination, const uint32_t* 
 * \brief Byte reverse an array of 64-bit integers
 *
 * \param destination: the destination array
-* \param source: the source array
+* \param source: [const] the source array
 * \param length: the length of the integer array
 */
 QSC_EXPORT_API void qsc_intutils_bswap64(uint64_t* destination, const uint64_t* source, size_t length);
@@ -157,15 +150,15 @@ QSC_EXPORT_API void qsc_intutils_clear64(uint64_t* a, size_t count);
 * \brief Constant-time conditional move function
 * b=1 means move, b=0 means don't move
 *
-* \param r: The return array
-* \param x: The source array
+* \param dest: The return array
+* \param source: [const] The source array
 * \param length: The number of bytes to move
-* \param b: The condition
+* \param cond: The condition
 */
-QSC_EXPORT_API void qsc_intutils_cmov(uint8_t* r, const uint8_t* x, size_t length, uint8_t b);
+QSC_EXPORT_API void qsc_intutils_cmov(uint8_t* dest, const uint8_t* source, size_t length, uint8_t cond);
 
 /**
-* \brief Constant time: expand an integer mask in constant time
+* \brief Expand an integer mask in constant time
 *
 * \param x: The N bit word
 * \return: A N bit expanded word
@@ -173,13 +166,13 @@ QSC_EXPORT_API void qsc_intutils_cmov(uint8_t* r, const uint8_t* x, size_t lengt
 QSC_EXPORT_API size_t qsc_intutils_expand_mask(size_t x);
 
 /**
-* \brief Check if an integer (x) is greater or equal to a second integer (y)
+* \brief Check if an integer is greater or equal to a second integer
 *
 * \param x: The base integer
 * \param y: The comparison integer
 * \return: Returns true if the base integer is greater or equal to the comparison integer
 */
-QSC_EXPORT_API bool qsc_intutils_is_equal(size_t x, size_t y);
+QSC_EXPORT_API bool qsc_intutils_are_equal(size_t x, size_t y);
 
 /**
 * \brief Check if an integer (x) is greater or equal to a second integer (y)
@@ -193,17 +186,17 @@ QSC_EXPORT_API bool qsc_intutils_is_gte(size_t x, size_t y);
 /**
 * \brief Convert a hex string to an array
 *
-* \param hexstr: The hexidecimal string
+* \param hexstr: [const] The hexadecimal string
 * \param output: The array output
-* \param length: The length of the input string
+* \param length: The length of the output array
 */
 QSC_EXPORT_API void qsc_intutils_hex_to_bin(const char* hexstr, uint8_t* output, size_t length);
 
 /**
 * \brief Convert an array to a hex string
 *
-* \param input: The array input
-* \param hexstr: The hexidecimal string output; must be 2x the size of input array
+* \param input: [const] The array input
+* \param hexstr: The hexadecimal string output; must be 2x the size of input array
 * \param length: The length of the input array
 */
 QSC_EXPORT_API void qsc_intutils_bin_to_hex(const uint8_t* input, char* hexstr, size_t length);
@@ -237,7 +230,7 @@ QSC_EXPORT_API void qsc_intutils_leincrement_x512(__m512i* counter);
 /**
 * \brief Convert an 8-bit integer array to a 16-bit little-endian integer
 *
-* \param input: The source integer 8-bit array
+* \param input: [const] The source integer 8-bit array
 * \return Returns the 16-bit little endian integer
 */
 QSC_EXPORT_API uint16_t qsc_intutils_le8to16(const uint8_t* input);
@@ -245,7 +238,7 @@ QSC_EXPORT_API uint16_t qsc_intutils_le8to16(const uint8_t* input);
 /**
 * \brief Convert an 8-bit integer array to a 32-bit little-endian integer
 *
-* \param input: The source integer 8-bit array
+* \param input: [const] The source integer 8-bit array
 * \return Returns the 32-bit little endian integer
 */
 QSC_EXPORT_API uint32_t qsc_intutils_le8to32(const uint8_t* input);
@@ -253,7 +246,7 @@ QSC_EXPORT_API uint32_t qsc_intutils_le8to32(const uint8_t* input);
 /**
 * \brief Convert an 8-bit integer array to a 64-bit little-endian integer
 *
-* \param input: The source integer 8-bit array
+* \param input: [const] The source integer 8-bit array
 * \return Returns the 64-bit little endian integer
 */
 QSC_EXPORT_API uint64_t qsc_intutils_le8to64(const uint8_t* input);
@@ -301,11 +294,23 @@ QSC_EXPORT_API size_t qsc_intutils_max(size_t a, size_t b);
 QSC_EXPORT_API size_t qsc_intutils_min(size_t a, size_t b);
 
 #if defined(QSC_SYSTEM_HAS_AVX)
-QSC_EXPORT_API void qsc_intutils_reverse_bytes_x128(__m128i* input, __m128i* output);
+/**
+* \brief Reverse a 128-bit array
+*
+* \param input: [const] The first 128-bit integer array
+* \param output: The second 128-bit integer
+*/
+QSC_EXPORT_API void qsc_intutils_reverse_bytes_x128(const __m128i* input, __m128i* output);
 #endif
 
 #if defined(QSC_SYSTEM_HAS_AVX512)
-QSC_EXPORT_API void qsc_intutils_reverse_bytes_x512(__m512i* input, __m512i* output);
+/**
+* \brief Reverse a 512-bit array
+*
+* \param input: [const] The first 512-bit integer array
+* \param output: The second 512-bit integer
+*/
+QSC_EXPORT_API void qsc_intutils_reverse_bytes_x512(const __m512i* input, __m512i* output);
 #endif
 
 /**
@@ -345,10 +350,11 @@ QSC_EXPORT_API uint32_t qsc_intutils_rotr32(uint32_t value, size_t shift);
 QSC_EXPORT_API uint64_t qsc_intutils_rotr64(uint64_t value, size_t shift);
 
 /**
-* \brief Constant time comparison of two 8-bit arrays
+* \brief Constant time comparison of two arrays of unsigned 8-bit integers
 *
-* \param a: The first 8-bit integer array
-* \param b: The second 8-bit integer array
+* \param a: [const] The first 8-bit integer array
+* \param b: [const] The second 8-bit integer array
+* \param length: The number of bytes to check
 * \return Returns zero if the arrays are equivalent
 */
 QSC_EXPORT_API int32_t qsc_intutils_verify(const uint8_t* a, const uint8_t* b, size_t length);

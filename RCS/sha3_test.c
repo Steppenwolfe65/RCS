@@ -79,8 +79,8 @@ bool qsctest_sha3_256_kat()
 	qsc_intutils_clear8(hash, sizeof(hash));
 	/* initialize the SHA3 state structure */
 	qsc_sha3_initialize(&state);
-	qsc_sha3_update(&state, keccak_rate_256, msg0, 0);
-	qsc_sha3_finalize(&state, keccak_rate_256, hash);
+	qsc_sha3_update(&state, qsc_keccak_rate_256, msg0, 0);
+	qsc_sha3_finalize(&state, qsc_keccak_rate_256, hash);
 
 	if (qsc_intutils_are_equal8(hash, exp0, sizeof(exp0)) == false)
 	{
@@ -90,8 +90,8 @@ bool qsctest_sha3_256_kat()
 
 	qsc_intutils_clear8(hash, sizeof(hash));
 	qsc_sha3_initialize(&state);
-	qsc_sha3_update(&state, keccak_rate_256, msg24, sizeof(msg24));
-	qsc_sha3_finalize(&state, keccak_rate_256, hash);
+	qsc_sha3_update(&state, qsc_keccak_rate_256, msg24, sizeof(msg24));
+	qsc_sha3_finalize(&state, qsc_keccak_rate_256, hash);
 
 	if (qsc_intutils_are_equal8(hash, exp24, sizeof(exp24)) == false)
 	{
@@ -102,8 +102,8 @@ bool qsctest_sha3_256_kat()
 	qsc_intutils_clear8(hash, sizeof(hash));
 	qsc_sha3_initialize(&state);
 	/* absorb the message */
-	qsc_sha3_update(&state, keccak_rate_256, msg448, sizeof(msg448));
-	qsc_sha3_finalize(&state, keccak_rate_256, hash);
+	qsc_sha3_update(&state, qsc_keccak_rate_256, msg448, sizeof(msg448));
+	qsc_sha3_finalize(&state, qsc_keccak_rate_256, hash);
 
 	if (qsc_intutils_are_equal8(hash, exp448, sizeof(exp448)) == false)
 	{
@@ -115,9 +115,9 @@ bool qsctest_sha3_256_kat()
 	/* initialize the SHA3 state structure */
 	qsc_sha3_initialize(&state);
 	/* absorb the message */
-	qsc_sha3_update(&state, keccak_rate_256, msg1600, sizeof(msg1600));
+	qsc_sha3_update(&state, qsc_keccak_rate_256, msg1600, sizeof(msg1600));
 	/* finalize the message */
-	qsc_sha3_finalize(&state, keccak_rate_256, hash);
+	qsc_sha3_finalize(&state, qsc_keccak_rate_256, hash);
 
 	if (qsc_intutils_are_equal8(hash, exp1600, sizeof(exp1600)) == false)
 	{
@@ -208,8 +208,8 @@ bool qsctest_sha3_512_kat()
 	qsc_intutils_clear8(hash, sizeof(hash));
 	/* initialize the SHA3 state structure */
 	qsc_sha3_initialize(&state);
-	qsc_sha3_update(&state, keccak_rate_512, msg0, 0);
-	qsc_sha3_finalize(&state, keccak_rate_512, hash);
+	qsc_sha3_update(&state, qsc_keccak_rate_512, msg0, 0);
+	qsc_sha3_finalize(&state, qsc_keccak_rate_512, hash);
 
 	if (qsc_intutils_are_equal8(hash, exp0, sizeof(exp0)) == false)
 	{
@@ -219,8 +219,8 @@ bool qsctest_sha3_512_kat()
 
 	qsc_intutils_clear8(hash, sizeof(hash));
 	qsc_sha3_initialize(&state);
-	qsc_sha3_update(&state, keccak_rate_512, msg24, sizeof(msg24));
-	qsc_sha3_finalize(&state, keccak_rate_512, hash);
+	qsc_sha3_update(&state, qsc_keccak_rate_512, msg24, sizeof(msg24));
+	qsc_sha3_finalize(&state, qsc_keccak_rate_512, hash);
 
 	if (qsc_intutils_are_equal8(hash, exp24, sizeof(exp24)) == false)
 	{
@@ -230,8 +230,8 @@ bool qsctest_sha3_512_kat()
 
 	qsc_intutils_clear8(hash, sizeof(hash));
 	qsc_sha3_initialize(&state);
-	qsc_sha3_update(&state, keccak_rate_512, msg448, sizeof(msg448));
-	qsc_sha3_finalize(&state, keccak_rate_512, hash);
+	qsc_sha3_update(&state, qsc_keccak_rate_512, msg448, sizeof(msg448));
+	qsc_sha3_finalize(&state, qsc_keccak_rate_512, hash);
 
 	if (qsc_intutils_are_equal8(hash, exp448, sizeof(exp448)) == false)
 	{
@@ -243,9 +243,9 @@ bool qsctest_sha3_512_kat()
 	/* initialize the SHA3 state*/
 	qsc_sha3_initialize(&state);
 	/* absorb the message */
-	qsc_sha3_update(&state, keccak_rate_512, msg1600, sizeof(msg1600));
+	qsc_sha3_update(&state, qsc_keccak_rate_512, msg1600, sizeof(msg1600));
 	/* finalize the message */
-	qsc_sha3_finalize(&state, keccak_rate_512, hash);
+	qsc_sha3_finalize(&state, qsc_keccak_rate_512, hash);
 
 	if (qsc_intutils_are_equal8(hash, exp1600, sizeof(exp1600)) == false)
 	{
@@ -260,7 +260,7 @@ bool qsctest_shake_128_kat()
 {
 	uint8_t exp0[512] = { 0 };
 	uint8_t exp1600[512] = { 0 };
-	uint8_t hash[keccak_rate_128 * 4] = { 0 };
+	uint8_t hash[qsc_keccak_rate_128 * 4] = { 0 };
 	uint8_t msg0[1] = { 0 };
 	uint8_t msg1600[200] = { 0 };
 	uint8_t output[512] = { 0 };
@@ -335,8 +335,8 @@ bool qsctest_shake_128_kat()
 
 	qsc_intutils_clear8(hash, sizeof(hash));
 	qsc_intutils_clear64(state.state, QSC_KECCAK_STATE_SIZE);
-	qsc_shake_initialize(&state, keccak_rate_128, msg1600, sizeof(msg1600));
-	qsc_shake_squeezeblocks(&state, keccak_rate_128, hash, 4);
+	qsc_shake_initialize(&state, qsc_keccak_rate_128, msg1600, sizeof(msg1600));
+	qsc_shake_squeezeblocks(&state, qsc_keccak_rate_128, hash, 4);
 
 	if (qsc_intutils_are_equal8(hash, exp1600, sizeof(exp1600)) == false)
 	{
@@ -351,7 +351,7 @@ bool qsctest_shake_256_kat()
 {
 	uint8_t exp0[512] = { 0 };
 	uint8_t exp1600[512] = { 0 };
-	uint8_t hash[keccak_rate_256 * 4] = { 0 };
+	uint8_t hash[qsc_keccak_rate_256 * 4] = { 0 };
 	uint8_t msg0[1] = { 0 };
 	uint8_t msg1600[200] = { 0 };
 	uint8_t output[512] = { 0 };
@@ -426,8 +426,8 @@ bool qsctest_shake_256_kat()
 
 	qsc_intutils_clear8(hash, sizeof(hash));
 	qsc_intutils_clear64(state.state, QSC_KECCAK_STATE_SIZE);
-	qsc_shake_initialize(&state, keccak_rate_256, msg1600, sizeof(msg1600));
-	qsc_cshake_squeezeblocks(&state, keccak_rate_256, hash, 4);
+	qsc_shake_initialize(&state, qsc_keccak_rate_256, msg1600, sizeof(msg1600));
+	qsc_cshake_squeezeblocks(&state, qsc_keccak_rate_256, hash, 4);
 
 	if (qsc_intutils_are_equal8(hash, exp1600, sizeof(exp1600)) == false)
 	{
@@ -442,7 +442,7 @@ bool qsctest_shake_512_kat()
 {
 	uint8_t exp1[512] = { 0 };
 	uint8_t exp2[512] = { 0 };
-	uint8_t hash[keccak_rate_512 * 8] = { 0 };
+	uint8_t hash[qsc_keccak_rate_512 * 8] = { 0 };
 	uint8_t msg1[64] = { 0 };
 	uint8_t msg2[200] = { 0 };
 	uint8_t output[512] = { 0 };
@@ -520,8 +520,8 @@ bool qsctest_shake_512_kat()
 
 	qsc_intutils_clear8(output, sizeof(output));
 	qsc_intutils_clear64(state.state, QSC_KECCAK_STATE_SIZE);
-	qsc_shake_initialize(&state, keccak_rate_512, msg1, sizeof(msg1));
-	qsc_shake_squeezeblocks(&state, keccak_rate_512, hash, 8);
+	qsc_shake_initialize(&state, qsc_keccak_rate_512, msg1, sizeof(msg1));
+	qsc_shake_squeezeblocks(&state, qsc_keccak_rate_512, hash, 8);
 
 	if (qsc_intutils_are_equal8(hash, exp1, sizeof(exp1)) == false)
 	{
@@ -537,7 +537,7 @@ bool qsctest_cshake_128_kat()
 	uint8_t cust[15] = { 0 };
 	uint8_t exp256a[32] = { 0 };
 	uint8_t exp256b[32] = { 0 };
-	uint8_t hashb[keccak_rate_128] = { 0 };
+	uint8_t hashb[qsc_keccak_rate_128] = { 0 };
 	uint8_t msg32[4] = { 0 };
 	uint8_t msg1600[200] = { 0 };
 	uint8_t name[1] = { 0 };
@@ -583,8 +583,8 @@ bool qsctest_cshake_128_kat()
 	/* test long-form api */
 
 	qsc_intutils_clear64(state.state, QSC_KECCAK_STATE_SIZE);
-	qsc_cshake_initialize(&state, keccak_rate_128, msg1600, sizeof(msg1600), name, 0, cust, sizeof(cust));
-	qsc_cshake_squeezeblocks(&state, keccak_rate_128, hashb, 1);
+	qsc_cshake_initialize(&state, qsc_keccak_rate_128, msg1600, sizeof(msg1600), name, 0, cust, sizeof(cust));
+	qsc_cshake_squeezeblocks(&state, qsc_keccak_rate_128, hashb, 1);
 
 	if (qsc_intutils_are_equal8(hashb, exp256b, sizeof(exp256b)) == false)
 	{
@@ -600,7 +600,7 @@ bool qsctest_cshake_256_kat()
 	uint8_t cust[15] = { 0 };
 	uint8_t exp512a[64] = { 0 };
 	uint8_t exp512b[64] = { 0 };
-	uint8_t hashb[keccak_rate_256] = { 0 };
+	uint8_t hashb[qsc_keccak_rate_256] = { 0 };
 	uint8_t msg32[4] = { 0 };
 	uint8_t msg1600[200] = { 0 };
 	uint8_t name[1] = { 0 };
@@ -649,8 +649,8 @@ bool qsctest_cshake_256_kat()
 
 
 	qsc_intutils_clear64(state.state, QSC_KECCAK_STATE_SIZE);
-	qsc_cshake_initialize(&state, keccak_rate_256, msg1600, sizeof(msg1600), name, 0, cust, sizeof(cust));
-	qsc_cshake_squeezeblocks(&state, keccak_rate_256, hashb, 1);
+	qsc_cshake_initialize(&state, qsc_keccak_rate_256, msg1600, sizeof(msg1600), name, 0, cust, sizeof(cust));
+	qsc_cshake_squeezeblocks(&state, qsc_keccak_rate_256, hashb, 1);
 
 	if (qsc_intutils_are_equal8(hashb, exp512b, sizeof(exp512b)) == false)
 	{
@@ -665,7 +665,7 @@ bool qsctest_cshake_512_kat()
 {
 	uint8_t exp512[64] = { 0 };
 	uint8_t cust[15] = { 0 };
-	uint8_t hashb[keccak_rate_512] = { 0 };
+	uint8_t hashb[qsc_keccak_rate_512] = { 0 };
 	uint8_t msg512[64] = { 0 };
 	uint8_t output[64] = { 0 };
 	qsc_keccak_state state;
@@ -696,8 +696,8 @@ bool qsctest_cshake_512_kat()
 	qsc_intutils_clear8(output, sizeof(output));
 	qsc_intutils_clear64(state.state, QSC_KECCAK_STATE_SIZE);
 
-	qsc_cshake_initialize(&state, keccak_rate_512, msg512, sizeof(msg512), NULL, 0, cust, sizeof(cust));
-	qsc_cshake_squeezeblocks(&state, keccak_rate_512, hashb, 1);
+	qsc_cshake_initialize(&state, qsc_keccak_rate_512, msg512, sizeof(msg512), NULL, 0, cust, sizeof(cust));
+	qsc_cshake_squeezeblocks(&state, qsc_keccak_rate_512, hashb, 1);
 
 	if (qsc_intutils_are_equal8(hashb, exp512, sizeof(exp512)) == false)
 	{
@@ -723,13 +723,10 @@ bool qsctest_kmac_128_kat()
 	bool status;
 
 	qsctest_hex_to_bin("4D7920546167676564204170706C69636174696F6E", cust168, sizeof(cust168));
-
 	qsctest_hex_to_bin("E5780B0D3EA6F7D3A429C5706AA43A00FADBD7D49628839E3187243F456EE14E", exp256a, sizeof(exp256a));
 	qsctest_hex_to_bin("3B1FBA963CD8B0B59E8C1A6D71888B7143651AF8BA0A7070C0979E2811324AA5", exp256b, sizeof(exp256b));
 	qsctest_hex_to_bin("1F5B4E6CCA02209E0DCB5CA635B89A15E271ECC760071DFD805FAA38F9729230", exp256c, sizeof(exp256c));
-
 	qsctest_hex_to_bin("404142434445464748494A4B4C4D4E4F505152535455565758595A5B5C5D5E5F", key256, sizeof(key256));
-
 	qsctest_hex_to_bin("00010203", msg32, sizeof(msg32));
 	qsctest_hex_to_bin("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F"
 		"202122232425262728292A2B2C2D2E2F303132333435363738393A3B3C3D3E3F"
@@ -774,9 +771,9 @@ bool qsctest_kmac_128_kat()
 	qsc_intutils_clear64(state.state, QSC_KECCAK_STATE_SIZE);
 	qsc_intutils_clear8(output, sizeof(output));
 
-	qsc_kmac_initialize(&state, keccak_rate_128, key256, sizeof(key256), cust168, sizeof(cust168));
-	qsc_kmac_update(&state, keccak_rate_128, msg1600, sizeof(msg1600));
-	qsc_kmac_finalize(&state, keccak_rate_128, output, sizeof(output));
+	qsc_kmac_initialize(&state, qsc_keccak_rate_128, key256, sizeof(key256), cust168, sizeof(cust168));
+	qsc_kmac_update(&state, qsc_keccak_rate_128, msg1600, sizeof(msg1600));
+	qsc_kmac_finalize(&state, qsc_keccak_rate_128, output, sizeof(output));
 
 	if (qsc_intutils_are_equal8(output, exp256c, sizeof(exp256c)) == false)
 	{
@@ -856,9 +853,9 @@ bool qsctest_kmac_256_kat()
 	qsc_intutils_clear64(state.state, QSC_KECCAK_STATE_SIZE);
 	qsc_intutils_clear8(output, sizeof(output));
 
-	qsc_kmac_initialize(&state, keccak_rate_256, key256, sizeof(key256), cust168, sizeof(cust168));
-	qsc_kmac_update(&state, keccak_rate_256, msg1600, sizeof(msg1600));
-	qsc_kmac_finalize(&state, keccak_rate_256, output, sizeof(output));
+	qsc_kmac_initialize(&state, qsc_keccak_rate_256, key256, sizeof(key256), cust168, sizeof(cust168));
+	qsc_kmac_update(&state, qsc_keccak_rate_256, msg1600, sizeof(msg1600));
+	qsc_kmac_finalize(&state, qsc_keccak_rate_256, output, sizeof(output));
 
 	if (qsc_intutils_are_equal8(output, exp256c, sizeof(exp256c)) == false)
 	{
@@ -942,9 +939,9 @@ bool qsctest_kmac_512_kat()
 	qsc_intutils_clear64(state.state, QSC_KECCAK_STATE_SIZE);
 	qsc_intutils_clear8(output, sizeof(output));
 
-	qsc_kmac_initialize(&state, keccak_rate_512, key0, sizeof(key0), cust1, sizeof(cust1));
-	qsc_kmac_update(&state, keccak_rate_512, msg1, sizeof(msg1));
-	qsc_kmac_finalize(&state, keccak_rate_512, output, sizeof(output));
+	qsc_kmac_initialize(&state, qsc_keccak_rate_512, key0, sizeof(key0), cust1, sizeof(cust1));
+	qsc_kmac_update(&state, qsc_keccak_rate_512, msg1, sizeof(msg1));
+	qsc_kmac_finalize(&state, qsc_keccak_rate_512, output, sizeof(output));
 
 	if (qsc_intutils_are_equal8(output, exp2, sizeof(exp2)) == false)
 	{
@@ -957,7 +954,6 @@ bool qsctest_kmac_512_kat()
 
 bool qsctest_kpa_256_kat()
 {
-	uint8_t cust0[1] = { 0 };
 	uint8_t cust168[21] = { 0 };
 	uint8_t exp256a[32] = { 0 };
 	uint8_t exp256b[32] = { 0 };
@@ -1036,7 +1032,6 @@ bool qsctest_kpa_256_kat()
 
 bool qsctest_kpa_512_kat()
 {
-	uint8_t cust0[1] = { 0 };
 	uint8_t cust168[21] = { 0 };
 	uint8_t exp512a[64] = { 0 };
 	uint8_t exp512b[64] = { 0 };
@@ -1332,12 +1327,11 @@ bool qsctest_shake128x4_equality()
 	uint8_t key[4][18] = { 0 };
 	uint8_t otp[4][168] = { 0 };
 	uint8_t exp[4][168] = { 0 };
-	size_t i;
 	bool status;
 
 	status = true;
 
-	for (i = 0; i < 16; ++i)
+	for (size_t i = 0; i < 16; ++i)
 	{
 		key[0][i] = (uint8_t)i;
 		key[1][i] = (uint8_t)i;
@@ -1392,12 +1386,11 @@ bool qsctest_shake256x4_equality()
 	uint8_t key[4][34] = { 0 };
 	uint8_t otp[4][136] = { 0 };
 	uint8_t exp[4][136] = { 0 };
-	size_t i;
 	bool status;
 
 	status = true;
 
-	for (i = 0; i < 32; ++i)
+	for (size_t i = 0; i < 32; ++i)
 	{
 		key[0][i] = (uint8_t)i;
 		key[1][i] = (uint8_t)i;
@@ -1452,12 +1445,11 @@ bool qsctest_shake512x4_equality()
 	uint8_t key[4][66] = { 0 };
 	uint8_t otp[4][72] = { 0 };
 	uint8_t exp[4][72] = { 0 };
-	size_t i;
 	bool status;
 
 	status = true;
 
-	for (i = 0; i < 64; ++i)
+	for (size_t i = 0; i < 64; ++i)
 	{
 		key[0][i] = (uint8_t)i;
 		key[1][i] = (uint8_t)i;
@@ -2186,48 +2178,10 @@ bool qsctest_shake512x8_equality()
 
 	return status;
 }
-
-static void scatter_gather_test()
-{
-	// internal reference -remove
-	uint8_t inp[256] = { 0 };
-	uint8_t otp[256] = { 0 };
-	__m256i t[8] = { 0 };
-	__m256i idx;
-	__m256i idx2;
-	size_t i;
-	size_t pos;
-
-	pos = 0;
-
-	for (i = 0; i < sizeof(inp); ++i)
-	{
-		inp[i] = (uint8_t)i;
-	}
-
-	idx = _mm256_set_epi64x((int64_t)&inp[192], (int64_t)&inp[128], (int64_t)&inp[64], (int64_t)&inp[0]);
-
-	for (i = 0; i < 8; ++i)
-	{
-		t[i] = _mm256_i64gather_epi64((int64_t*)pos, idx, 1);
-		pos += sizeof(uint64_t);
-	}
-
-	pos = 0;
-
-	for (i = 0; i < 8; ++i)
-	{
-		idx2 = _mm256_set_epi64x(0xC0ULL + pos, 0x80ULL + pos, 0x40ULL + pos, pos);
-		_mm256_i64scatter_epi64(otp, idx2, t[i], 1);
-		pos += sizeof(uint64_t);
-	}
-}
 #endif
 
 void qsctest_sha3_run()
 {
-	qsctest_shake_256_kat();
-
 	if (qsctest_cshake_256_kat() == true)
 	{
 		qsctest_print_safe("Success! Passed the cSHAKE-256 KAT test. \n");
@@ -2331,15 +2285,6 @@ void qsctest_sha3_run()
 
 	if (qsctest_kmac128x4_equality() == true)
 	{
-		qsctest_print_safe("Success! Passed the KMAC-512 4x SIMD equality test. \n");
-	}
-	else
-	{
-		qsctest_print_safe("Failure! Failed the KMAC-512 4x SIMD equality test. \n");
-	}
-
-	if (qsctest_kmac256x4_equality() == true)
-	{
 		qsctest_print_safe("Success! Passed the KMAC-128 4x SIMD equality test. \n");
 	}
 	else
@@ -2347,13 +2292,22 @@ void qsctest_sha3_run()
 		qsctest_print_safe("Failure! Failed the KMAC-128 4x SIMD equality test. \n");
 	}
 
-	if (qsctest_kmac512x4_equality() == true)
+	if (qsctest_kmac256x4_equality() == true)
 	{
 		qsctest_print_safe("Success! Passed the KMAC-256 4x SIMD equality test. \n");
 	}
 	else
 	{
 		qsctest_print_safe("Failure! Failed the KMAC-256 4x SIMD equality test. \n");
+	}
+
+	if (qsctest_kmac512x4_equality() == true)
+	{
+		qsctest_print_safe("Success! Passed the KMAC-512 4x SIMD equality test. \n");
+	}
+	else
+	{
+		qsctest_print_safe("Failure! Failed the KMAC-512 4x SIMD equality test. \n");
 	}
 
 	if (qsctest_shake128x4_equality() == true)

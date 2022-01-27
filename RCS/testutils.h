@@ -13,7 +13,7 @@ char qsctest_get_char();
 /**
 * \brief Pause the console until user input is detected
 */
-void qsctest_get_wait();
+char qsctest_get_wait();
 
 /**
 * \brief Convert a hexadecimal character string to a binary byte array
@@ -66,6 +66,6 @@ void qsctest_print_double(double digit);
 *
 * \param message: the message to print
 */
-bool qsctest_test_confirm(char* message);
+bool qsctest_test_confirm(const char* message);
 
 #endif

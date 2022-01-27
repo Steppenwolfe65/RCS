@@ -1,13 +1,13 @@
 #include "intutils.h"
+#include "memutils.h"
 
 bool qsc_intutils_are_equal8(const uint8_t* a, const uint8_t* b, size_t length)
 {
 	bool status;
-	size_t i;
 
 	status = true;
 
-	for (i = 0; i < length; ++i)
+	for (size_t i = 0; i < length; ++i)
 	{
 		if (a[i] != b[i])
 		{
@@ -23,11 +23,15 @@ void qsc_intutils_be8increment(uint8_t* output, size_t outlen)
 {
 	size_t i = outlen;
 
-	do
+	if (outlen > 0)
 	{
-		--i;
-		++output[i];
-	} while (i != 0 && output[i] == 0);
+		do
+		{
+			--i;
+			++output[i];
+		} 
+		while (i != 0 && output[i] == 0);
+	}
 }
 
 uint16_t qsc_intutils_be8to16(const uint8_t* input)
@@ -85,32 +89,28 @@ void qsc_intutils_be64to8(uint8_t* output, uint64_t value)
 #if defined(QSC_SYSTEM_HAS_AVX)
 void qsc_intutils_bswap32(uint32_t* destination, const uint32_t* source, size_t length)
 {
-	size_t i;
 	__m128i mask = _mm_set_epi8(12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3);
 
-	for (i = 0; i < length; i += 4)
+	for (size_t i = 0; i < length; i += 4)
 	{
-		_mm_storeu_si128((__m128i*) & destination[i], _mm_shuffle_epi8(_mm_loadu_si128((__m128i*) & source[i]), mask));
+		_mm_storeu_si128((__m128i*)&destination[i], _mm_shuffle_epi8(_mm_loadu_si128((const __m128i*)&source[i]), mask));
 	}
 }
 
 void qsc_intutils_bswap64(uint64_t* destination, const uint64_t* source, size_t length)
 {
-	size_t i;
 	__m128i mask = _mm_set_epi8(8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7);
 
-	for (i = 0; i < length; i += 2)
+	for (size_t i = 0; i < length; i += 2)
 	{
-		_mm_storeu_si128((__m128i*) & destination[i], _mm_shuffle_epi8(_mm_loadu_si128((__m128i*) & source[i]), mask));
+		_mm_storeu_si128((__m128i*)&destination[i], _mm_shuffle_epi8(_mm_loadu_si128((const __m128i*)&source[i]), mask));
 	}
 }
 #endif
 
 void qsc_intutils_clear8(uint8_t* a, size_t count)
 {
-	size_t i;
-
-	for (i = 0; i < count; ++i)
+	for (size_t i = 0; i < count; ++i)
 	{
 		a[i] = 0;
 	}
@@ -118,9 +118,7 @@ void qsc_intutils_clear8(uint8_t* a, size_t count)
 
 void qsc_intutils_clear16(uint16_t* a, size_t count)
 {
-	size_t i;
-
-	for (i = 0; i < count; ++i)
+	for (size_t i = 0; i < count; ++i)
 	{
 		a[i] = 0;
 	}
@@ -128,9 +126,7 @@ void qsc_intutils_clear16(uint16_t* a, size_t count)
 
 void qsc_intutils_clear32(uint32_t* a, size_t count)
 {
-	size_t i;
-
-	for (i = 0; i < count; ++i)
+	for (size_t i = 0; i < count; ++i)
 	{
 		a[i] = 0;
 	}
@@ -138,35 +134,30 @@ void qsc_intutils_clear32(uint32_t* a, size_t count)
 
 void qsc_intutils_clear64(uint64_t* a, size_t count)
 {
-	size_t i;
-
-	for (i = 0; i < count; ++i)
+	for (size_t i = 0; i < count; ++i)
 	{
 		a[i] = 0;
 	}
 }
 
-void qsc_intutils_cmov(uint8_t* r, const uint8_t* x, size_t length, uint8_t b)
+void qsc_intutils_cmov(uint8_t* dest, const uint8_t* source, size_t length, uint8_t cond)
 {
-	size_t i;
+	cond = ~cond + 1;
 
-	b = ~b + 1;
-
-	for (i = 0; i < length; i++)
+	for (size_t i = 0; i < length; i++)
 	{
-		r[i] ^= (uint8_t)(b & (uint8_t)(x[i] ^ r[i]));
+		dest[i] ^= (uint8_t)(cond & (uint8_t)(source[i] ^ dest[i]));
 	}
 }
 
 size_t qsc_intutils_expand_mask(size_t x)
 {
-	size_t i;
 	size_t r;
 
 	r = x;
 
 	/* fold r down to a single bit */
-	for (i = 1; i != sizeof(size_t) * 8; i *= 2)
+	for (size_t i = 1; i != sizeof(size_t) * 8; i *= 2)
 	{
 		r |= r >> i;
 	}
@@ -177,7 +168,7 @@ size_t qsc_intutils_expand_mask(size_t x)
 	return r;
 }
 
-bool qsc_intutils_is_equal(size_t x, size_t y)
+bool qsc_intutils_are_equal(size_t x, size_t y)
 {
 	return (bool)((x ^ y) == 0);
 }
@@ -195,12 +186,11 @@ void qsc_intutils_bin_to_hex(const uint8_t* input, char* hexstr, size_t length)
 	};
 
 	size_t ctr;
-	size_t i;
-	int vct;
+	int32_t vct;
 
 	ctr = 0;
 
-	for (i = 0; i < length; ++i)
+	for (size_t i = 0; i < length; ++i)
 	{
 		vct = input[i];
 		hexstr[ctr] = ENCODING_TABLE[vct >> 4];
@@ -212,9 +202,8 @@ void qsc_intutils_bin_to_hex(const uint8_t* input, char* hexstr, size_t length)
 
 void qsc_intutils_hex_to_bin(const char* hexstr, uint8_t* output, size_t length)
 {
-	size_t  pos;
-	uint8_t  idx0;
-	uint8_t  idx1;
+	uint8_t idx0;
+	uint8_t idx1;
 
 	const uint8_t hashmap[] =
 	{
@@ -224,9 +213,9 @@ void qsc_intutils_hex_to_bin(const char* hexstr, uint8_t* output, size_t length)
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	};
 
-	memset(output, 0, length);
+	qsc_memutils_clear(output, length);
 
-	for (pos = 0; pos < (length * 2); pos += 2)
+	for (size_t pos = 0; pos < (length * 2); pos += 2)
 	{
 		idx0 = ((uint8_t)hexstr[pos + 0] & 0x1FU) ^ 0x10U;
 		idx1 = ((uint8_t)hexstr[pos + 1] & 0x1FU) ^ 0x10U;
@@ -330,7 +319,7 @@ size_t qsc_intutils_min(size_t a, size_t b)
 }
 
 #if defined(QSC_SYSTEM_HAS_AVX)
-void qsc_intutils_reverse_bytes_x128(__m128i* input, __m128i* output)
+void qsc_intutils_reverse_bytes_x128(const __m128i* input, __m128i* output)
 {
 	__m128i mask = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
 
@@ -339,7 +328,7 @@ void qsc_intutils_reverse_bytes_x128(__m128i* input, __m128i* output)
 #endif
 
 #if defined(QSC_SYSTEM_HAS_AVX512)
-void qsc_intutils_reverse_bytes_x512(__m512i* input, __m512i* output)
+void qsc_intutils_reverse_bytes_x512(const __m512i* input, __m512i* output)
 {
 	__m512i mask = _mm512_set_epi8(
 		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
@@ -373,12 +362,11 @@ uint64_t qsc_intutils_rotr64(uint64_t value, size_t shift)
 
 int32_t qsc_intutils_verify(const uint8_t* a, const uint8_t* b, size_t length)
 {
-	size_t i;
 	uint16_t d;
 
 	d = 0;
 
-	for (i = 0; i < length; ++i)
+	for (size_t i = 0; i < length; ++i)
 	{
 		d |= (uint16_t)(a[i] ^ b[i]);
 	}

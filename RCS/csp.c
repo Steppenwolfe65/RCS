@@ -1,8 +1,10 @@
 #include "csp.h"
 
 #if defined(QSC_SYSTEM_OS_WINDOWS)
-#	include <windows.h>
-#	pragma comment(lib, "advapi32.lib")
+#	include <Windows.h>
+#   if defined(QSC_SYSTEM_COMPILER_MSC)
+#	    pragma comment(lib, "advapi32.lib")
+#   endif
 #else
 #	include <sys/types.h>
 #	include <sys/stat.h>
@@ -35,9 +37,9 @@ bool qsc_csp_generate(uint8_t* output, size_t length)
 
 	HCRYPTPROV hprov;
 
-	if (CryptAcquireContextW(&hprov, 0, 0, PROV_RSA_FULL, (CRYPT_VERIFYCONTEXT | CRYPT_SILENT)))
+	if (CryptAcquireContextW(&hprov, 0, 0, PROV_RSA_FULL, (CRYPT_VERIFYCONTEXT | CRYPT_SILENT)) == true)
 	{
-		if (!CryptGenRandom(hprov, (DWORD)length, output))
+		if (CryptGenRandom(hprov, (DWORD)length, output) == false)
 		{
 			res = false;
 		}
@@ -47,7 +49,7 @@ bool qsc_csp_generate(uint8_t* output, size_t length)
 		res = false;
 	}
 
-	if (hprov)
+	if (hprov != 0)
 	{
 		CryptReleaseContext(hprov, 0);
 	}

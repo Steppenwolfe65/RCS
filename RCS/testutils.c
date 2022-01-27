@@ -4,23 +4,42 @@
 char qsctest_get_char()
 {
 	char line[8] = { 0 };
-	fgets(line, sizeof(line), stdin);
+	char res;
 
-	return line[0];
+	res = '0';
+
+	if (fgets(line, sizeof(line), stdin) != NULL)
+	{
+		res = line[0];
+	}
+
+	return res;
 }
 
-void qsctest_get_wait()
+#if defined(QSC_SYSTEM_SOCKETS_WINDOWS)
+char qsctest_get_wait()
 {
-	wint_t res;
+	char c;
 
-	res = getwchar();
+	c = (wint_t)getwchar();
+
+	return c;
 }
+#else
+char qsctest_get_wait()
+{
+	char c;
+
+	c = getchar();
+
+	return c;
+}
+#endif
 
 void qsctest_hex_to_bin(const char* hexstr, uint8_t* output, size_t length)
 {
-	size_t  pos;
-	uint8_t  idx0;
-	uint8_t  idx1;
+	uint8_t idx0;
+	uint8_t idx1;
 
 	const uint8_t hashmap[] =
 	{
@@ -32,7 +51,7 @@ void qsctest_hex_to_bin(const char* hexstr, uint8_t* output, size_t length)
 
 	memset(output, 0, length);
 
-	for (pos = 0; pos < (length * 2); pos += 2)
+	for (size_t pos = 0; pos < (length * 2); pos += 2)
 	{
 		idx0 = ((uint8_t)hexstr[pos + 0] & 0x1FU) ^ 0x10U;
 		idx1 = ((uint8_t)hexstr[pos + 1] & 0x1FU) ^ 0x10U;
@@ -80,7 +99,7 @@ void qsctest_print_safe(const char* input)
 #if defined(_MSC_VER)
 		printf_s(input);
 #else
-		printf(input);
+		printf("%s", input);
 #endif
 	}
 }
@@ -96,7 +115,7 @@ void qsctest_print_ulong(uint64_t digit)
 #if defined(_MSC_VER)
 	printf_s("%llu", digit);
 #else
-	printf("%llu", digit);
+	printf("%llu", (unsigned long long)digit);
 #endif
 }
 
@@ -109,7 +128,7 @@ void qsctest_print_double(double digit)
 #endif
 }
 
-bool qsctest_test_confirm(char* message)
+bool qsctest_test_confirm(const char* message)
 {
 	char ans;
 	bool res;

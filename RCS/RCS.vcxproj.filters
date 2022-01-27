@@ -45,19 +45,25 @@
     <ClInclude Include="sha3_test.h">
       <Filter>Header Files\Tests</Filter>
     </ClInclude>
-    <ClInclude Include="cpuid.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="csp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="memutils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="timer.h">
+    <ClInclude Include="benchmark.h">
       <Filter>Header Files\Tests</Filter>
     </ClInclude>
-    <ClInclude Include="benchmark.h">
+    <ClInclude Include="cpuidex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="consoleutils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stringutils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="timerex.h">
       <Filter>Header Files\Tests</Filter>
     </ClInclude>
   </ItemGroup>
@@ -83,19 +89,25 @@
     <ClCompile Include="sha3_test.c">
       <Filter>Source Files\Tests</Filter>
     </ClCompile>
-    <ClCompile Include="cpuid.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="csp.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="memutils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="timer.c">
+    <ClCompile Include="benchmark.c">
       <Filter>Source Files\Tests</Filter>
     </ClCompile>
-    <ClCompile Include="benchmark.c">
+    <ClCompile Include="cpuidex.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="consoleutils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stringutils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="timerex.c">
       <Filter>Source Files\Tests</Filter>
     </ClCompile>
   </ItemGroup>

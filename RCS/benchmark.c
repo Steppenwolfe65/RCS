@@ -1,7 +1,7 @@
 #include "benchmark.h"
 #include "csp.h"
 #include "testutils.h"
-#include "timer.h"
+#include "timerex.h"
 #include "rcs.h"
 #include "sha3.h"
 
@@ -30,7 +30,7 @@ static void rcs256_speed_test()
 	/* encryption */
 
 	tctr = 0;
-	start = qsctest_timer_start();
+	start = qsc_timerex_stopwatch_start();
 
 	qsc_rcs_initialize(&ctx, &kp, true);
 
@@ -40,7 +40,7 @@ static void rcs256_speed_test()
 		++tctr;
 	}
 
-	elapsed = qsctest_timer_elapsed(start);
+	elapsed = qsc_timerex_stopwatch_elapsed(start);
 	qsctest_print_safe("RCS-256 processed 1GB of data in ");
 	qsctest_print_double((double)elapsed / 1000.0);
 	qsctest_print_line(" seconds");
@@ -66,7 +66,7 @@ static void rcs512_speed_test()
 	/* encryption */
 
 	tctr = 0;
-	start = qsctest_timer_start();
+	start = qsc_timerex_stopwatch_start();
 
 	qsc_rcs_initialize(&ctx, &kp, true);
 
@@ -76,7 +76,7 @@ static void rcs512_speed_test()
 		++tctr;
 	}
 
-	elapsed = qsctest_timer_elapsed(start);
+	elapsed = qsc_timerex_stopwatch_elapsed(start);
 	qsctest_print_safe("RCS-512 processed 1GB of data in ");
 	qsctest_print_double((double)elapsed / 1000.0);
 	qsctest_print_line(" seconds");
